@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>THE OTHER FOOTBALL — American Athlete Translation Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800;900&family=Archivo:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d110c;
+  --bg2:#131810;
+  --panel:#181f14;
+  --panel2:#1e2718;
+  --line:rgba(240,237,224,.14);
+  --line2:rgba(240,237,224,.07);
+  --chalk:#f0edE0;
+  --chalk-dim:#a8a795;
+  --volt:#d6fb3f;
+  --red:#ff4a3d;
+  --blue:#5b8cff;
+  --grass:#2e7d43;
+  --display:'Big Shoulders Display',sans-serif;
+  --body:'Archivo',sans-serif;
+  --mono:'Spline Sans Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--chalk);
+  font-family:var(--body);
+  overflow-x:hidden;
+}
+/* floodlights + grain */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(1200px 600px at 15% -5%, rgba(214,251,63,.07), transparent 60%),
+    radial-gradient(1000px 500px at 90% 0%, rgba(91,140,255,.06), transparent 60%),
+    radial-gradient(800px 800px at 50% 110%, rgba(46,125,67,.10), transparent 60%);
+}
+body::after{
+  content:"";position:fixed;inset:-50%;pointer-events:none;z-index:1000;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  animation:grain 8s steps(10) infinite;
+}
+@keyframes grain{
+  0%,100%{transform:translate(0,0)}10%{transform:translate(-5%,-5%)}20%{transform:translate(-10%,3%)}
+  30%{transform:translate(4%,-8%)}40%{transform:translate(-4%,10%)}50%{transform:translate(-10%,4%)}
+  60%{transform:translate(8%,0)}70%{transform:translate(0,8%)}80%{transform:translate(3%,12%)}90%{transform:translate(-6%,4%)}
+}
+main{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 28px}
+
+/* ---------- HERO ---------- */
+.hero{padding:76px 0 40px;border-bottom:3px solid var(--chalk)}
+.kicker{
+  font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--volt);display:flex;align-items:center;gap:12px;
+}
+.kicker::before{content:"";width:34px;height:2px;background:var(--volt)}
+.hero h1{
+  font-family:var(--display);font-weight:900;text-transform:uppercase;
+  font-size:clamp(56px,9.5vw,124px);line-height:.88;letter-spacing:.005em;
+  margin:20px 0 8px;
+}
+.hero h1 .flip{color:var(--volt);font-style:italic}
+.hero h1 .out{
+  -webkit-text-stroke:2px var(--chalk);color:transparent;
+}
+.hero-sub{
+  display:grid;grid-template-columns:1.5fr 1fr;gap:40px;margin-top:26px;align-items:end;
+}
+.hero-sub p{color:var(--chalk-dim);font-size:16px;line-height:1.55;max-width:56ch}
+.hero-sub p b{color:var(--chalk)}
+.hero-badges{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.badge{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;padding:8px 14px;
+  border:1px solid var(--line);border-radius:999px;color:var(--chalk-dim);
+}
+.badge.red{border-color:var(--red);color:var(--red)}
+.badge.blue{border-color:var(--blue);color:var(--blue)}
+.badge.volt{border-color:var(--volt);color:var(--volt)}
+.reveal{opacity:0;transform:translateY(18px);animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.d1{animation-delay:.05s}.d2{animation-delay:.15s}.d3{animation-delay:.3s}.d4{animation-delay:.45s}
+
+/* ---------- ASSUMPTIONS BAR ---------- */
+.assumptions{
+  position:sticky;top:0;z-index:50;background:rgba(13,17,12,.92);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);padding:14px 0;margin:0 -28px;
+}
+.assumptions-inner{max-width:1180px;margin:0 auto;padding:0 28px;display:flex;gap:36px;align-items:center;flex-wrap:wrap}
+.assumptions-label{
+  font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:18px;letter-spacing:.06em;
+  color:var(--volt);white-space:nowrap;
+}
+.slider-group{display:flex;align-items:center;gap:14px;flex:1;min-width:280px}
+.slider-group label{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-dim);white-space:nowrap}
+.slider-group input[type=range]{
+  -webkit-appearance:none;appearance:none;flex:1;height:3px;background:var(--line);border-radius:2px;outline:none;cursor:pointer;
+}
+.slider-group input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--volt);
+  border:3px solid var(--bg);box-shadow:0 0 0 1.5px var(--volt);cursor:grab;
+}
+.slider-val{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--volt);min-width:44px;text-align:right}
+.slider-hint{position:relative;cursor:help}
+.slider-hint:hover::after{
+  content:attr(data-tip);position:absolute;top:130%;left:0;width:260px;max-width:260px;background:var(--panel2);
+  border:1px solid var(--line);padding:10px 12px;font-family:var(--body);font-size:12px;line-height:1.45;
+  color:var(--chalk);text-transform:none;letter-spacing:normal;border-radius:6px;z-index:60;
+  white-space:normal;word-wrap:break-word;box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+.slider-group:last-of-type .slider-hint:hover::after{left:auto;right:0}
+
+/* ---------- SECTIONS ---------- */
+section{padding:64px 0}
+.sec-head{display:flex;align-items:baseline;gap:18px;margin-bottom:8px}
+.sec-num{font-family:var(--mono);font-size:13px;color:var(--red);letter-spacing:.2em}
+.sec-head h2{
+  font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:clamp(34px,5vw,58px);
+  letter-spacing:.01em;line-height:1;
+}
+.sec-desc{color:var(--chalk-dim);font-size:15px;max-width:70ch;line-height:1.55;margin-bottom:34px}
+
+/* ---------- ROSTER PICKER ---------- */
+.league-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.league-tab{
+  font-family:var(--display);font-weight:800;font-size:17px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:1px solid var(--line);color:var(--chalk-dim);padding:8px 20px;cursor:pointer;
+  transition:all .15s;
+}
+.league-tab:hover{border-color:var(--chalk);color:var(--chalk)}
+.league-tab.active{background:var(--chalk);color:var(--bg);border-color:var(--chalk)}
+.athlete-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:40px}
+.athlete-chip{
+  font-family:var(--body);font-weight:600;font-size:13.5px;
+  background:var(--panel);border:1px solid var(--line2);color:var(--chalk);
+  padding:9px 15px;cursor:pointer;border-radius:4px;transition:all .15s;display:flex;gap:8px;align-items:center;
+}
+.athlete-chip .lg{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--chalk-dim)}
+.athlete-chip:hover{border-color:var(--volt);transform:translateY(-1px)}
+.athlete-chip.active{background:var(--volt);color:var(--bg);border-color:var(--volt)}
+.athlete-chip.active .lg{color:rgba(13,17,12,.6)}
+
+/* ---------- TRANSLATION STAGE ---------- */
+.stage{display:grid;grid-template-columns:1fr 64px 1fr;gap:0;align-items:stretch}
+@media(max-width:900px){.stage{grid-template-columns:1fr}.stage-arrow{transform:rotate(90deg);margin:10px auto}}
+.card{
+  background:var(--panel);border:1px solid var(--line);padding:26px;position:relative;overflow:hidden;
+}
+.card.us{border-left:4px solid var(--red)}
+.card.soc{border-left:4px solid var(--volt);background:linear-gradient(160deg,var(--panel2),var(--panel))}
+.card-tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--chalk-dim);margin-bottom:14px}
+.card.us .card-tag{color:var(--red)}
+.card.soc .card-tag{color:var(--volt)}
+.card h3{font-family:var(--display);font-weight:900;font-size:40px;text-transform:uppercase;line-height:.95;letter-spacing:.01em}
+.card .meta{font-family:var(--mono);font-size:12px;color:var(--chalk-dim);margin:8px 0 20px;display:flex;gap:14px;flex-wrap:wrap}
+.stage-arrow{
+  display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;
+  font-size:34px;color:var(--volt);
+}
+.attr-row{display:grid;grid-template-columns:110px 1fr 34px;gap:10px;align-items:center;margin-bottom:8px}
+.attr-row .nm{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--chalk-dim)}
+.attr-row .val{font-family:var(--mono);font-size:13px;font-weight:700;text-align:right}
+.bar{height:7px;background:rgba(240,237,224,.08);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:2px;transition:width .5s cubic-bezier(.2,.7,.2,1)}
+.bar.red i{background:linear-gradient(90deg,#8a2a22,var(--red))}
+.bar.volt i{background:linear-gradient(90deg,#5a7a1a,var(--volt))}
+.ovr-line{display:flex;align-items:baseline;gap:14px;margin:4px 0 18px}
+.ovr-big{font-family:var(--display);font-weight:900;font-size:74px;line-height:1;color:var(--volt)}
+.ovr-lbl{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--chalk-dim);text-transform:uppercase}
+.pos-pill{
+  display:inline-block;font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.05em;
+  background:var(--volt);color:var(--bg);padding:2px 14px;margin-left:4px;transform:skewX(-8deg);
+}
+.fits{margin-top:20px}
+.fits h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--chalk-dim);margin-bottom:12px}
+.fit-row{display:grid;grid-template-columns:44px 1fr 34px;gap:10px;align-items:center;margin-bottom:6px}
+.fit-row .fp{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.05em}
+.fit-row.best .fp{color:var(--volt)}
+
+/* ---------- RADAR + VERDICT ---------- */
+.duel{display:grid;grid-template-columns:1fr 1.1fr;gap:24px;margin-top:24px;align-items:stretch}
+@media(max-width:900px){.duel{grid-template-columns:1fr}}
+.radar-panel{background:var(--panel);border:1px solid var(--line);padding:26px}
+.radar-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;flex-wrap:wrap}
+.radar-head .vs{font-family:var(--display);font-weight:900;font-size:22px;text-transform:uppercase}
+.radar-head .vs .a{color:var(--red)}.radar-head .vs .b{color:var(--blue)}
+select.comp-select{
+  background:var(--panel2);color:var(--chalk);border:1px solid var(--line);font-family:var(--mono);
+  font-size:12px;padding:8px 12px;border-radius:4px;cursor:pointer;outline:none;
+}
+.legend{display:flex;gap:18px;font-family:var(--mono);font-size:11px;color:var(--chalk-dim);margin-top:4px}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:2px}
+.verdict-panel{
+  background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--red);padding:26px;
+  display:flex;flex-direction:column;
+}
+.verdict-panel h4{
+  font-family:var(--display);font-weight:900;font-size:26px;text-transform:uppercase;letter-spacing:.02em;margin-bottom:14px;
+}
+.verdict-panel h4 span{color:var(--red)}
+.verdict-body{color:var(--chalk-dim);font-size:15px;line-height:1.65;flex:1}
+.verdict-body b{color:var(--chalk)}
+.verdict-body .num{font-family:var(--mono);color:var(--volt);font-weight:700}
+.stamp{
+  align-self:flex-start;margin-top:20px;font-family:var(--display);font-weight:900;font-size:19px;
+  text-transform:uppercase;letter-spacing:.08em;padding:6px 16px;border:2.5px solid;transform:rotate(-2deg);
+}
+.stamp.elite{color:var(--volt);border-color:var(--volt)}
+.stamp.good{color:var(--blue);border-color:var(--blue)}
+.stamp.mid{color:var(--chalk-dim);border-color:var(--chalk-dim)}
+.stamp.bust{color:var(--red);border-color:var(--red)}
+
+/* ---------- PITCH ---------- */
+.xi-wrap{display:grid;grid-template-columns:1.2fr .8fr;gap:28px;align-items:stretch}
+@media(max-width:900px){.xi-wrap{grid-template-columns:1fr}}
+.pitch{
+  position:relative;background:
+    repeating-linear-gradient(0deg, #1c3a24 0 9.09%, #1e3f28 9.09% 18.18%),
+    #1c3a24;
+  border:2px solid rgba(240,237,224,.35);border-radius:6px;aspect-ratio:3/4;overflow:hidden;
+}
+.pitch .lines{position:absolute;inset:0;pointer-events:none}
+.pitch .lines *{position:absolute;border:1.5px solid rgba(240,237,224,.3)}
+.pl-halfway{left:0;right:0;top:50%;border-width:1px 0 0 0 !important}
+.pl-circle{left:50%;top:50%;width:22%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%}
+.pl-box-t{left:22%;right:22%;top:-2px;height:14%;border-top:none !important}
+.pl-box-b{left:22%;right:22%;bottom:-2px;height:14%;border-bottom:none !important}
+.pl-6-t{left:36%;right:36%;top:-2px;height:6%;border-top:none !important}
+.pl-6-b{left:36%;right:36%;bottom:-2px;height:6%;border-bottom:none !important}
+.player-dot{
+  position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;z-index:5;transition:transform .15s;
+}
+.player-dot:hover{transform:translate(-50%,-50%) scale(1.1);z-index:6}
+.player-dot .disc{
+  width:46px;height:46px;border-radius:50%;margin:0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--red);border:2px solid var(--chalk);box-shadow:0 4px 14px rgba(0,0,0,.45);
+}
+.player-dot.gkdot .disc{background:var(--volt);}
+.player-dot.gkdot .disc .r8{color:var(--bg)}
+.player-dot.gkdot .disc .p8{color:rgba(13,17,12,.7)}
+.player-dot .r8{font-family:var(--display);font-weight:900;font-size:17px;line-height:1;color:#fff}
+.player-dot .p8{font-family:var(--mono);font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,.8)}
+.player-dot .nm8{
+  margin-top:5px;font-family:var(--body);font-weight:700;font-size:11px;color:var(--chalk);
+  background:rgba(13,17,12,.75);padding:2px 7px;border-radius:3px;white-space:nowrap;
+}
+.xi-side{display:flex;flex-direction:column;gap:16px}
+.team-ratings{background:var(--panel);border:1px solid var(--line);padding:22px}
+.team-ratings h4,.bench h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--chalk-dim);margin-bottom:14px}
+.tr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center}
+.tr-cell{background:var(--panel2);padding:14px 8px;border:1px solid var(--line2)}
+.tr-cell .v{font-family:var(--display);font-weight:900;font-size:38px;line-height:1;color:var(--volt)}
+.tr-cell .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--chalk-dim);margin-top:6px}
+.bench{background:var(--panel);border:1px solid var(--line);padding:22px;flex:1}
+.bench-row{display:flex;justify-content:space-between;font-size:13.5px;padding:7px 0;border-bottom:1px dashed var(--line2)}
+.bench-row:last-child{border-bottom:none}
+.bench-row .bp{font-family:var(--mono);font-size:11px;color:var(--chalk-dim)}
+.bench-row .bo{font-family:var(--mono);font-weight:700;color:var(--volt)}
+
+/* ---------- WORLD SIM ---------- */
+.sim-cta{
+  display:block;margin:0 auto;font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:.05em;
+  text-transform:uppercase;background:var(--volt);color:var(--bg);border:none;padding:18px 54px;cursor:pointer;
+  transform:skewX(-6deg);transition:all .15s;box-shadow:6px 6px 0 var(--red);
+}
+.sim-cta:hover{transform:skewX(-6deg) translate(-2px,-2px);box-shadow:9px 9px 0 var(--red)}
+.sim-cta:active{transform:skewX(-6deg) translate(3px,3px);box-shadow:2px 2px 0 var(--red)}
+.sim-results{margin-top:40px;display:none}
+.sim-results.show{display:block;animation:rise .6s cubic-bezier(.2,.7,.2,1)}
+.res-grid{display:grid;grid-template-columns:1.3fr .7fr;gap:24px;align-items:stretch}
+@media(max-width:900px){.res-grid{grid-template-columns:1fr}}
+.res-table{background:var(--panel);border:1px solid var(--line);padding:8px 24px 18px}
+.res-table table{width:100%;border-collapse:collapse}
+.res-table th{
+  font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--chalk-dim);
+  text-align:left;padding:14px 8px 10px;border-bottom:1px solid var(--line);
+}
+.res-table th.r,.res-table td.r{text-align:right}
+.res-table td{padding:11px 8px;border-bottom:1px dashed var(--line2);font-size:14px}
+.res-table tr:last-child td{border-bottom:none}
+.res-table .opp{font-weight:700}
+.res-table .flag{margin-right:8px}
+.wbar{display:inline-flex;height:8px;width:120px;border-radius:2px;overflow:hidden;vertical-align:middle;background:var(--line2)}
+.wbar .w{background:var(--volt)}.wbar .d{background:var(--chalk-dim)}.wbar .l{background:var(--red)}
+.res-table td.pct{font-family:var(--mono);font-size:12.5px;color:var(--chalk-dim)}
+.res-table td.pct b{color:var(--volt)}
+.big-verdict{
+  background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--volt);padding:26px;
+  display:flex;flex-direction:column;gap:16px;
+}
+.bv-stat{display:flex;align-items:baseline;gap:14px}
+.bv-stat .v{font-family:var(--display);font-weight:900;font-size:58px;line-height:1;color:var(--volt)}
+.bv-stat .l{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--chalk-dim);line-height:1.5}
+.bv-text{color:var(--chalk-dim);font-size:14.5px;line-height:1.6;flex:1}
+.bv-text b{color:var(--chalk)}
+
+/* ---------- FOOTER ---------- */
+footer{
+  border-top:3px solid var(--chalk);margin-top:30px;padding:34px 0 60px;
+  display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;
+}
+footer p{font-family:var(--mono);font-size:11px;color:var(--chalk-dim);letter-spacing:.06em;line-height:1.7;max-width:64ch}
+footer .logo{font-family:var(--display);font-weight:900;font-size:22px;text-transform:uppercase}
+footer .logo span{color:var(--volt)}
+::selection{background:var(--volt);color:var(--bg)}
+</style>
+</head>
+<body>
+<main>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="kicker reveal d1">ATHLETE TRANSLATION ENGINE // HYPOTHESIS NO. 1</div>
+    <h1 class="reveal d2">WHAT IF AMERICA<br>PLAYED <span class="out">THE OTHER</span> <span class="flip">FOOTBALL?</span></h1>
+    <div class="hero-sub">
+      <p class="reveal d3">Suppose America's leagues never existed — no NBA, NFL, NHL, MLB, none of it — and every
+      generational American athlete grew up in a soccer academy instead. Would <b>Tyreek Hill</b> torch Premier League
+      fullbacks? Would <b>Steph Curry's</b> handles translate to Messi-grade dribbling? Is <b>LeBron</b> the greatest
+      goalkeeper who never was? Is <b>Simone Biles</b> physically possible to tackle?
+      This engine translates their measured athletic traits into soccer ratings, finds their position,
+      and simulates the hypothetical USA XI against the world's best — including the cap-tied stars who'd line up against us.</p>
+      <div class="hero-badges reveal d4">
+        <span class="badge red">NBA</span><span class="badge red">NFL</span><span class="badge red">NHL</span><span class="badge red">MLB</span>
+        <span class="badge red">WNBA</span><span class="badge red">TRACK</span><span class="badge red">COMBAT</span><span class="badge red">OLYMPIC</span>
+        <span class="badge">→</span><span class="badge volt">FIFA WORLD XI</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ASSUMPTIONS -->
+  <div class="assumptions">
+    <div class="assumptions-inner">
+      <div class="assumptions-label">The Assumptions</div>
+      <div class="slider-group">
+        <label class="slider-hint" data-tip="How completely does each athlete's fine-motor genius (Steph's handles, Mahomes' arm) convert into feet-first technique after a childhood in a top academy? 100% = perfect conversion. Capped by pipeline quality — even a perfect learner can't outgrow bad coaching.">Technique transfer ⓘ</label>
+        <input type="range" id="techSlider" min="55" max="100" value="85">
+        <span class="slider-val" id="techVal">85%</span>
+      </div>
+      <div class="slider-group">
+        <label class="slider-hint" data-tip="Quality of the hypothetical US development ecosystem — academies, youth leagues, high school and college soccer, coaching, culture from day one. Sets the ceiling on technique transfer (Tyreek in a great academy at six ≠ Tyreek converting at 25) and adds team cohesion in the world sim.">Pipeline quality ⓘ</label>
+        <input type="range" id="pipeSlider" min="50" max="100" value="80">
+        <span class="slider-val" id="pipeVal">80%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATHLETE LAB -->
+  <section id="lab">
+    <div class="sec-head"><span class="sec-num">01</span><h2>The Athlete Lab</h2></div>
+    <p class="sec-desc">Pick an athlete. Raw athletic traits (left) transfer at nearly full value. Technical craft (right)
+    is projected from their demonstrated fine-motor skill and sport IQ, discounted by the technique-transfer slider.
+    Height helps keepers — but on grass it taxes everything else: dribbling low, turning with quick attackers,
+    and the 90-minute engine. Agile giants get pushed toward goal, where every inch is free.</p>
+
+    <div class="league-tabs" id="leagueTabs"></div>
+    <div class="athlete-grid" id="athleteGrid"></div>
+
+    <div class="stage">
+      <div class="card us" id="usCard"></div>
+      <div class="stage-arrow">»</div>
+      <div class="card soc" id="socCard"></div>
+    </div>
+
+    <div class="duel">
+      <div class="radar-panel">
+        <div class="radar-head">
+          <div class="vs" id="radarTitle"></div>
+          <select class="comp-select" id="compSelect"></select>
+        </div>
+        <div id="radarBox"></div>
+        <div class="legend" id="radarLegend"></div>
+      </div>
+      <div class="verdict-panel">
+        <h4>The <span>Scouting Report</span></h4>
+        <div class="verdict-body" id="verdictBody"></div>
+        <div class="stamp" id="verdictStamp"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- USA XI -->
+  <section id="xi">
+    <div class="sec-head"><span class="sec-num">02</span><h2>The Hypothetical USA XI</h2></div>
+    <p class="sec-desc">The engine assigns every USA-eligible athlete to the position where they rate highest, then fields
+    the best possible 4-3-3. Ratings update live when you move the assumption sliders. One catch this hypothetical
+    can't dodge: Ohtani, Giannis, and Elly De La Cruz are cap-tied to their home federations — you'll meet them in the world sim instead.</p>
+    <div class="xi-wrap">
+      <div class="pitch" id="pitch">
+        <div class="lines">
+          <div class="pl-halfway"></div><div class="pl-circle"></div>
+          <div class="pl-box-t"></div><div class="pl-box-b"></div>
+          <div class="pl-6-t"></div><div class="pl-6-b"></div>
+        </div>
+      </div>
+      <div class="xi-side">
+        <div class="team-ratings">
+          <h4>Team Ratings</h4>
+          <div class="tr-grid">
+            <div class="tr-cell"><div class="v" id="trAtt">–</div><div class="l">Attack</div></div>
+            <div class="tr-cell"><div class="v" id="trDef">–</div><div class="l">Defense</div></div>
+            <div class="tr-cell"><div class="v" id="trOvr">–</div><div class="l">Overall</div></div>
+          </div>
+        </div>
+        <div class="bench">
+          <h4>The Bench (next best in pool)</h4>
+          <div id="benchList"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORLD SIM -->
+  <section id="sim">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Simulate The World</h2></div>
+    <p class="sec-desc">1,500 Monte Carlo matches against each football superpower (Poisson goal model driven by
+    attack-vs-defense rating gaps), plus a knockout-gauntlet estimate of World Cup win probability.</p>
+    <button class="sim-cta" id="simBtn">Run the World Cup »</button>
+    <div class="sim-results" id="simResults">
+      <div class="res-grid">
+        <div class="res-table">
+          <table>
+            <thead><tr><th>Opponent</th><th>Result Mix</th><th class="r">W / D / L</th><th class="r">Avg Score</th></tr></thead>
+            <tbody id="resBody"></tbody>
+          </table>
+        </div>
+        <div class="big-verdict">
+          <div class="bv-stat"><div class="v" id="bvRank">–</div><div class="l">Estimated<br>FIFA Ranking</div></div>
+          <div class="bv-stat"><div class="v" id="bvWC">–</div><div class="l">World Cup<br>Win Probability</div></div>
+          <div class="bv-text" id="bvText"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="logo">THE OTHER <span>FOOTBALL</span></div>
+    <p>A bar-argument simulator, not a peer-reviewed study. Ratings are editorial estimates of prime-year athletes.
+    The one thing every scout agrees on: the athletes were never the problem. The pipeline was.</p>
+  </footer>
+</main>
+
+<script>
+/* ================= DATA ================= */
+/* raw traits 0-99: pac top speed, acc burst, agi change of direction, str strength,
+   sta engine, jmp leap, coord fine-motor/touch analog, vis sport IQ/vision, cmp composure, mot work-rate/aggression */
+const ATHLETES = [
+ // NBA
+ {id:'curry',   name:'Steph Curry',        league:'NBA', pos:'PG',  h:74, w:185, note:'Greatest shooter ever · 4× champ',
+  t:{pac:82,acc:88,agi:94,str:62,sta:90,jmp:76,coord:99,vis:96,cmp:98,mot:90},
+  blurb:`This is the closest thing America has ever produced to a footballing brain in the wrong sport. The hand-eye coordination, the deception in tight spaces, the release speed, the off-ball movement — every one of those maps to elite chance creation. His dribbling projects to <b>{dri}</b> against Messi's 96: at full technique transfer he's genuinely in that conversation, and even at realistic settings he's a world-class No. 10. What he'd truly own is <b>set pieces</b> — the most repeatable precision striker of a dead ball alive. The gap to Messi isn't hands vs feet, it's 30,000 childhood hours of touches. That's exactly what this hypothetical gives him.`},
+ {id:'lebron',  name:'LeBron James',       league:'NBA', pos:'SF',  h:81, w:250, note:'4× MVP · 40k points · The King',
+  t:{pac:89,acc:90,agi:84,str:98,sta:96,jmp:96,coord:90,vis:99,cmp:95,mot:93},
+  blurb:`The goalkeeper theory is real, and the engine — now that it prices what 6'9" costs you on grass — finally agrees with the barstool: he's a <b>{bestpos}</b>, rated <b>{gk}</b>, the greatest who never was. A 7-foot wingspan, elite hands, and the fastest processing speed in team sports means he owns his entire box, and the sweeper-keeper part comes free — he reads the whole pitch quicker than the men playing on it and splits a press with one flat 60-yard diagonal. The outfield case (Van Dijk's frame, Vieira's engine, a quarterback's brain) is still elite, but it spends the wingspan on nothing. Between the posts, every inch is free.`},
+ {id:'giannis', name:'Giannis Antetokounmpo', league:'NBA', pos:'PF', h:83, w:243, note:'2× MVP · Freak of nature', nat:{flag:'🇬🇷',country:'Greece'},
+  t:{pac:90,acc:88,agi:80,str:97,sta:92,jmp:94,coord:76,vis:84,cmp:78,mot:96},
+  blurb:`A 6'11" athlete who covers ground like a gazelle sounds like a Kompany-style colossus — until you price what 6'11" costs your turning circle against a quick striker on grass. The engine grades the technique conservatively (his handle was always functional, not fine), taxes the frame honestly, and slides him between the posts: a <b>{bestpos}</b> whose wingspan makes the goal look decorative, and who still marches forward for attacking corners like a siege engine. Every set piece for either team becomes an event. Fun fact for the timeline: Giannis grew up in Greece hawking sunglasses and playing street soccer — and in this universe he's Greece's keeper. This hypothetical nearly happened.`},
+ {id:'edwards', name:'Anthony Edwards',    league:'NBA', pos:'SG',  h:76, w:225, note:'Face of the league · 40" vertical',
+  t:{pac:90,acc:93,agi:90,str:88,sta:88,jmp:97,coord:85,vis:78,cmp:85,mot:88},
+  blurb:`Ant actually said it himself: he was a youth football phenom who picked hoops late. The explosion, the shoulders, the fearlessness — that's a Premier League wide forward's toolkit. Projects as a <b>{bestpos}</b> who attacks the back post like he attacks the rim. The vision number caps his playmaking, but as a direct, downhill winger who wants the moment? He'd be a nightmare, and he'd talk the entire 90 minutes.`},
+ {id:'westbrook',name:'Russell Westbrook', league:'NBA', pos:'PG',  h:75, w:200, note:'MVP · Triple-double machine',
+  t:{pac:94,acc:96,agi:92,str:85,sta:95,jmp:96,coord:80,vis:70,cmp:62,mot:97},
+  blurb:`The most kinetic athlete of his NBA generation, and the engine loves the motor: a pressing machine who'd cover 13km a match at full sprint. The catch is the same as it ever was — <b>decision-making at speed</b>. Composure of 62 means the final ball goes into Row Z more than the net. He's a chaos wing-back: turnovers created, turnovers committed, zero minutes of calm. Managers would age a decade. Fans would build statues.`},
+ {id:'durant',  name:'Kevin Durant',       league:'NBA', pos:'SF',  h:82, w:240, note:'2× Finals MVP · Purest scorer alive',
+  t:{pac:84,acc:82,agi:78,str:80,sta:86,jmp:84,coord:95,vis:90,cmp:92,mot:84},
+  blurb:`A 6'10" human with a guard's touch is the great cheat code in any sport — but grass, unlike hardwood, sends the big man a bill. Price in the turning circle and the 90-minute engine, and the outfield case collapses to a target-man novelty; the engine's honest verdict is <b>{bestpos}</b>, rated <b>{bestovr}</b>, where the touch, the reach, and the calm all survive intact. Picture Crouch's frame with actual elegance, distributing off the floor like a quarterback. The knock is the same as it ever was: does he want the physical war of a Premier League winter? In goal, conveniently, nobody is allowed to hit him.`},
+ {id:'kyrie',   name:'Kyrie Irving',       league:'NBA', pos:'PG',  h:74, w:195, note:'Champion · The best handle ever dribbled',
+  t:{pac:84,acc:90,agi:95,str:70,sta:86,jmp:82,coord:99,vis:88,cmp:92,mot:80},
+  blurb:`The purest ball manipulation in basketball history — ambidextrous, impossible angles, a handle so fluid it looked pre-rendered. If this site's thesis is "fine-motor genius converts to feet," Kyrie is the strongest test case in the pool: the engine reads a 99 fine-motor score and prints <b>{dri}</b> dribbling at current settings — and at full pipeline and transfer, he's the only athlete here who genuinely knocks on Messi's 96. Projects as a <b>{bestpos}</b> who beats his man in a phone booth and finishes with either foot off either post. He would, at some point, publicly question whether the pitch is flat. The pitch, like everyone else, would still fail to take the ball off him.`},
+ {id:'isaiah',  name:'Isaiah Thomas',      league:'NBA', pos:'PG',  h:69, w:185, note:`5'9" · 29 PPG season · King in the Fourth`,
+  t:{pac:86,acc:92,agi:94,str:62,sta:88,jmp:80,coord:93,vis:87,cmp:90,mot:93},
+  blurb:`The argument nobody makes until they see it: soccer is the one major sport where 5'9" isn't a tax, it's the factory spec. Messi is 5'7". Maradona was 5'5". Modrić, Xavi, Iniesta — all smaller than this man. Every trait that made Isaiah's NBA career improbable makes his soccer career obvious: the low center of gravity, the burst into space, the total absence of fear at a physical disadvantage. The engine gives him <b>{dri}</b> on the ball, zero height tax anywhere, and a <b>{bestpos}</b> projection with a 93 motor. In the NBA he was fighting his sport's physics. Here, for the first time, the physics fight for him.`},
+ // NFL
+ {id:'tyreek',  name:'Tyreek Hill',        league:'NFL', pos:'WR',  h:70, w:191, note:'Fastest man in the NFL · 4.29s 40yd',
+  t:{pac:99,acc:99,agi:96,str:74,sta:88,jmp:90,coord:87,vis:80,cmp:84,mot:88},
+  blurb:`The engine's easiest call. World-class soccer pace tops out around 37 km/h — Tyreek hit 36.6 <b>in pads, mid-game</b>. His pace/acceleration combo projects to <b>{pac}</b>, above Mbappé's 97, making him plausibly the fastest player in the sport's history. Route-running is functionally elite off-ball movement, so the runs behind the line come pre-installed; only the final touch is a projection. He wouldn't just start in the Premier League — every back line in Europe would defend ten yards deeper purely out of respect. Fullbacks would see him in their sleep.`},
+ {id:'lamar',   name:'Lamar Jackson',      league:'NFL', pos:'QB',  h:74, w:212, note:'2× MVP · Most elusive man alive',
+  t:{pac:95,acc:96,agi:98,str:80,sta:90,jmp:85,coord:86,vis:92,cmp:90,mot:90},
+  blurb:`Maybe the best pure open-field mover America has ever produced — the cuts, the tempo changes, the ability to make grown men grab air. That agility number (98) is the best dribbling ingredient of any modern athlete in the pool — only Barry Sanders' 99 tops it, and Barry needed thirty fewer pounds to do it. Add a processor that reads eleven moving defenders pre-snap and you get a <b>{bestpos}</b> who carries the ball through midfield like prime Gareth Bale with better hips. Of every quarterback ever, he's the one whose game actually translates — because his greatness was never about the pocket.`},
+ {id:'mahomes', name:'Patrick Mahomes',    league:'NFL', pos:'QB',  h:74, w:225, note:'3× Super Bowl MVP',
+  t:{pac:78,acc:82,agi:86,str:78,sta:85,jmp:78,coord:97,vis:98,cmp:96,mot:88},
+  blurb:`Forget the arm — the transferable gift is the <b>improvisational geometry</b>: no-look throws, off-platform angles, solving broken plays in half a second. That's a passing brain, and it projects to <b>{pas}</b>, in De Bruyne territory. He's not beating anyone in a footrace, so the engine deploys him as its <b>{bestpos}</b> — the conductor who hits 50-yard switches sidefooted and threads passes nobody else on the pitch can see. Ketchup on the pre-match pasta, unfortunately, is non-negotiable.`},
+ {id:'brady',   name:'Tom Brady',          league:'NFL', pos:'QB',  h:76, w:225, note:'7 rings · The GOAT (of a sport with pockets)',
+  t:{pac:48,acc:52,agi:55,str:72,sta:80,jmp:55,coord:90,vis:99,cmp:99,mot:95},
+  blurb:`You called it. The greatest winner in American sports history ran a 5.28-second 40-yard dash, and soccer — cruelly — has no pocket to stand in. The engine still respects the software (vision and composure are literally perfect), so he scrapes out a <b>{bestovr}</b> as a <b>{bestpos}</b> — dead last in the pool: a slow-motion deep-lying passer who never misplaces a ball and never, ever wins a footrace. A possession club could hide him behind two destroyers. Dominate? Not a chance. The GOAT gene expresses itself elsewhere — give him fifteen years and he owns the federation, and hypothetical America never loses off the pitch again.`},
+ {id:'saquon',  name:'Saquon Barkley',     league:'NFL', pos:'RB',  h:72, w:233, note:'2,000-yard season · The backwards hurdle',
+  t:{pac:95,acc:95,agi:93,str:93,sta:89,jmp:95,coord:82,vis:82,cmp:86,mot:90},
+  blurb:`233 pounds moving at 4.3 speed with a 41-inch vertical — there is no current soccer player built anything like this. The engine makes him a <b>{bestpos}</b>, and honestly the sport's tacticians would invent a new role for him: the battering-ram wide man who wins every duel, every second ball, every footrace. The backwards-hurdle balance suggests the ball control would come. Defenders bounce off him; he does not bounce off defenders.`},
+ {id:'henry',   name:'Derrick Henry',      league:'NFL', pos:'RB',  h:75, w:247, note:'King Henry · 2,027-yard season',
+  t:{pac:92,acc:84,agi:74,str:99,sta:90,jmp:82,coord:72,vis:74,cmp:84,mot:95},
+  blurb:`A 247-pound man who runs a 4.33 is a physics violation, and the engine responds by making him a <b>{bestpos}</b> who treats attackers the way he treated defensive backs: as speed bumps. The stiff-arm becomes the cleanest shoulder challenge ever seen. Technique projects modest — his game was never subtle — but you don't buy Derrick Henry for the rondo. You buy him so that no striker on earth enjoys a single minute of the ninety.`},
+ {id:'jefferson',name:'Justin Jefferson',  league:'NFL', pos:'WR',  h:73, w:195, note:'The Griddy · Best hands in football',
+  t:{pac:93,acc:92,agi:94,str:74,sta:88,jmp:92,coord:93,vis:84,cmp:88,mot:86},
+  blurb:`The body control is the tell — the sideline toe-taps, the mid-air adjustments, the catches through contact. That's proprioception you can't coach, and it converts to a <b>{bestpos}</b> with genuinely elite ball control at speed. Of every receiver in the league, he's the one whose skill (not just wheels) projects. And the Griddy transfers at 100%. Corner flag celebrations alone justify the transfer fee.`},
+ {id:'parsons', name:'Micah Parsons',      league:'NFL', pos:'EDGE',h:75, w:245, note:'Fastest defensive player alive',
+  t:{pac:93,acc:92,agi:88,str:95,sta:92,jmp:90,coord:74,vis:86,cmp:84,mot:99},
+  blurb:`Watch a Parsons pursuit rep and you're watching a No. 6 destroy a counterattack — the closing speed, the angles, the violence of arrival. The engine gives him a 99 motor, tied for best in the pool, and slots him as a <b>{bestpos}</b>: the midfield destroyer who ends attacks before they're attacks. Prime Kanté energy in a body two weight classes up. Attackers would start passing backwards the moment they heard footsteps.`},
+ {id:'cmc',     name:'Christian McCaffrey',league:'NFL', pos:'RB',  h:71, w:210, note:'Triple crown · The most complete back',
+  t:{pac:92,acc:93,agi:92,str:82,sta:99,jmp:88,coord:86,vis:88,cmp:90,mot:96},
+  blurb:`The 99 stamina is the story — CMC's whole career is doing everything, everywhere, all game. That's the literal job description of a modern box-to-box midfielder, and the engine slots him at <b>{bestpos}</b> almost perfectly. Route-running gives him the movement, receiving gives him the soft first touch analog, and the engine never, ever stops. He's the guy covering for the wing-back in the 93rd minute of a June friendly. Every manager's favorite player within a week.`},
+ {id:'sauce',   name:'Sauce Gardner',      league:'NFL', pos:'CB',  h:75, w:200, note:`All-Pro corner · QBs don't even look`,
+  t:{pac:94,acc:90,agi:92,str:80,sta:90,jmp:90,coord:78,vis:92,cmp:90,mot:92},
+  blurb:`The cornerback-to-fullback pipeline is the cleanest translation American football offers, and Sauce is its current apex: 6'3" of hip-flip and recovery speed whose job is already man-marking the fastest athletes alive on an island, alone, with no help coming. The engine grades him a <b>{bestpos}</b> and the scouting report writes itself — wingers who draw his side of the pitch simply have a quiet afternoon. The technique number is honest (corners deny the ball; they don't create with it), so the attacking overlap needs coaching. The lockdown does not. Some players defend space. Sauce forecloses it.`},
+ // NHL
+ {id:'matthews',name:'Auston Matthews',    league:'NHL', pos:'C',   h:75, w:220, note:'69-goal season · Best release in hockey',
+  t:{pac:84,acc:86,agi:85,str:86,sta:90,jmp:78,coord:97,vis:90,cmp:93,mot:85},
+  blurb:`Here's the cheat: Matthews grew up in Arizona <b>playing and loving soccer</b> — this hypothetical is barely hypothetical. A hockey release is disguise plus placement plus a half-second window, which is exactly what finishing is. His shooting projects to <b>{sho}</b>, best in the pool, and the engine makes him the <b>{bestpos}</b> this team is built around: a Harry Kane-style striker who drops in, links play, and buries anything within 25 yards. Twenty-five goals a season, minimum, and he'd barely celebrate any of them.`},
+ {id:'jhughes', name:'Jack Hughes',        league:'NHL', pos:'C',   h:71, w:175, note:'Edgework wizard · No. 1 pick',
+  t:{pac:88,acc:92,agi:96,str:68,sta:88,jmp:74,coord:94,vis:94,cmp:86,mot:86},
+  blurb:`Hockey's best edgework translated to grass is a low-center-of-gravity dribbler who manipulates defenders' momentum for a living — on skates, at 20 mph, while being hunted. The engine reads that as <b>{dri}</b> dribbling and a natural <b>{bestpos}</b>. He's the closest thing in the pool to an actual Silva/Modrić profile: small, slippery, sees everything early. The strength number says he gets kicked a lot. The agility number says they mostly miss.`},
+ {id:'tkachuk', name:'Matthew Tkachuk',    league:'NHL', pos:'W',   h:75, w:220, note:'Playoff menace · Professional agitator',
+  t:{pac:78,acc:80,agi:78,str:92,sta:90,jmp:74,coord:88,vis:88,cmp:92,mot:99},
+  blurb:`Every great team needs one villain, and Tkachuk is a top-two villain in world sport. The engine grades him a <b>{bestpos}</b> with a 99 motor and elite hands in tight — but the real import is the dark arts: winning penalties, starting scuffles at exactly the right moment, living rent-free in the opponent's head by minute 15. He is the only athlete in this pool who would somehow get Van Dijk booked. Uruguay has Suárez; hypothetical America has Tkachuk.`},
+ {id:'hellebuyck',name:'Connor Hellebuyck',league:'NHL', pos:'G',   h:76, w:216, note:'Back-to-back Vezina · Best goalie on earth',
+  t:{pac:60,acc:62,agi:92,str:84,sta:82,jmp:80,coord:95,vis:97,cmp:94,mot:88},
+  blurb:`The control case: an actual elite goaltender, moved 100 feet back and handed gloves. Tracking a 100-mph puck through traffic makes a 70-mph shot from 18 yards look like slow motion, and positioning is the same geometry in both sports. He projects to <b>{gk}</b> — immediately in the Courtois/Alisson tier conversation. The one hole: hockey goalies never leave the crease, so the sweeper-keeper part needs to be coached in. Shot-stopping? Already world class. This one isn't even a projection, it's a transfer.`},
+ // MLB
+ {id:'betts',   name:'Mookie Betts',       league:'MLB', pos:'RF',  h:69, w:180, note:'MVP · Gold Gloves everywhere · Pro bowler',
+  t:{pac:88,acc:90,agi:93,str:70,sta:88,jmp:84,coord:96,vis:92,cmp:94,mot:92},
+  blurb:`Pound for pound the best pure athlete baseball has produced this century — a 5'9" outfielder with a cannon arm, Gold Glove routes, and a side hobby of bowling perfect games in PBA events. That's the tell: world-class fine motor in three separate skill domains. The engine converts the hand-eye to <b>{dri}</b> dribbling, and the arm — rotational power is rotational power — into a strike of the ball that projects to <b>{sho}</b>. He lands as a <b>{bestpos}</b> with zero height tax and a scratch golfer's touch on set pieces. The smallest man in the pool, and quietly one of its most complete footballers.`},
+ {id:'ohtani',  name:'Shohei Ohtani',      league:'MLB', pos:'DH/P',h:76, w:210, note:'3× MVP · 50/50 club · Does two jobs', nat:{flag:'🇯🇵',country:'Japan'},
+  t:{pac:90,acc:86,agi:82,str:95,sta:88,jmp:84,coord:96,vis:90,cmp:92,mot:90},
+  blurb:`He already does two full-time jobs at a world-class level, so a third is hardly a stretch. Elite sprint speed for a power hitter, a 100-mph arm's worth of rotational violence, and the hand-eye that produces 119-mph contact. The engine sees a <b>{bestpos}</b> with a frame defenders can't move and a shot that projects to <b>{sho}</b>. The real edge is the thing no slider captures: this is the athlete who reorganized an entire sport's assumptions about what one person can do. Soccer would simply be the third discipline he's better at than everyone told him was possible.`},
+ {id:'elly',    name:'Elly De La Cruz',    league:'MLB', pos:'SS',  h:77, w:200, note:'Fastest man in baseball · Cannon arm', nat:{flag:'🇩🇴',country:'Dominican Republic'},
+  t:{pac:97,acc:94,agi:88,str:84,sta:90,jmp:88,coord:82,vis:74,cmp:72,mot:90},
+  blurb:`The fastest man in baseball is 6'5", switch-hits, and owns the hardest infield throw ever tracked. The engine reads the physical file and prints <b>{pac}</b> pace — Mbappé's neighborhood — attached to a frame that wins every aerial duel. The composure number is doing the honest work: he strikes out a lot for the same reason his final ball would sail into the stands, because everything happens at maximum throttle. A <b>{bestpos}</b> who is either the most electrifying player on the pitch or the most frustrating, frequently within the same five minutes.`},
+ {id:'judge',   name:'Aaron Judge',        league:'MLB', pos:'RF',  h:79, w:282, note:'62 HR season · Largest outfielder ever',
+  t:{pac:82,acc:78,agi:72,str:98,sta:84,jmp:86,coord:92,vis:88,cmp:92,mot:88},
+  blurb:`A 6'7", 282-pound man with elite hand-eye and a sneaky-quick first step is either a center back who wins literally everything in the air or the most obvious goalkeeper experiment since the LeBron theory. The engine projects <b>{gk}</b> in goal — the top corner effectively stops existing — but grades him even better as a <b>{bestpos}</b>. The height tax buries his dribbling, but that was never the plan. The plan: every cross into either box belongs to Aaron Judge now. The set-piece xG alone justifies the shirt.`},
+ {id:'fedde',   name:'Erick Fedde',        league:'MLB', pos:'SP',  h:76, w:205, note:'MLB starter · HS soccer state champion',
+  t:{pac:72,acc:70,agi:74,str:78,sta:82,jmp:70,coord:88,vis:80,cmp:85,mot:82},
+  blurb:`The pool's only credentialed footballer: Fedde actually played high school soccer and won a state championship before baseball claimed him. That matters — some of the first 10,000 hours of touch are real here, not projected, so mentally waive part of the technique-transfer discount for this one. The engine's honest read is a <b>{bestovr}</b>-rated <b>{bestpos}</b>: a pitcher's command translates to clean, repeatable striking of a dead ball, but a pitcher's sprint speed translates to a pitcher's sprint speed. Great feet, always in the right spot, never wins a footrace. Every Sunday league has this guy — except this one also throws 95.`},
+ {id:'buxton',  name:'Byron Buxton',       league:'MLB', pos:'CF',  h:74, w:190, note:'Platinum Glove · 99th-percentile sprint speed',
+  t:{pac:96,acc:94,agi:90,str:78,sta:78,jmp:90,coord:85,vis:80,cmp:82,mot:88},
+  blurb:`For most of a decade the fastest player in baseball, with center-field routes that read as elite off-ball movement and a highlight reel of full-extension catches proving the body control transfers. The engine prints <b>{pac}</b> pace and a natural <b>{bestpos}</b> profile. The stamina number carries an asterisk the size of Minnesota — Buxton's career is what happens when a Ferrari insists on doing its own stunts. But soccer has no outfield walls to run into. The theory says he finally plays all 90.`},
+ // LEGENDS
+ {id:'bo',      name:'Bo Jackson',         league:'LEGENDS', pos:'RB/OF', h:73, w:227, note:'All-Star in two sports · 4.13s 40yd at 227 lbs',
+  t:{pac:99,acc:97,agi:90,str:97,sta:85,jmp:94,coord:85,vis:78,cmp:84,mot:92},
+  blurb:`The reason this website exists. The only athlete ever named an All-Star in both MLB and the NFL, with the fastest verified 40 time in combine history — at 227 pounds. Bo isn't a projection problem, he's proof of concept: the man already translated generational athleticism across two sports for a living. The engine prints <b>{pac}</b> pace welded to a 97 strength and grades him a <b>{bestpos}</b> — the same physics that made him unarrestable with the ball make him a one-man riot without it, and whatever line he stands in, nobody on the pitch wants to meet him at full speed. The technique grade is honest (power over polish), but Bo's whole career says the engine is underselling him. Bo knows soccer. Bo knows everything.`},
+ {id:'deion',   name:'Deion Sanders',      league:'LEGENDS', pos:'CB/OF', h:73, w:198, note:'Prime Time · Super Bowl + World Series · 4.27s 40yd',
+  t:{pac:98,acc:96,agi:96,str:76,sta:90,jmp:92,coord:84,vis:90,cmp:92,mot:85},
+  blurb:`The only human to play in both a Super Bowl and a World Series, and the purest positional translation in the pool: an NFL corner's job — read the attacker's hips, match the run, win the recovery race — is a modern <b>{bestpos}</b>'s job description verbatim. The engine gives him <b>{pac}</b> pace with elite anticipation and closes the case. The motor number carries a wink: Deion famously treated tackling as optional, and he'd treat defensive headers the same way. Doesn't matter. Nobody completes a pass into his zone for ninety straight minutes, and the celebration high-steps into the corner flag.`},
+ {id:'jordan',  name:'Michael Jordan',     league:'LEGENDS', pos:'SG',  h:78, w:216, note:'6 rings · The GOAT · Cut nobody ever forgot',
+  t:{pac:92,acc:94,agi:93,str:88,sta:94,jmp:99,coord:96,vis:94,cmp:99,mot:99},
+  blurb:`The engine's spiciest take in the whole pool: the greatest offensive player in basketball history projects best as a <b>{bestovr}</b>-rated <b>{bestpos}</b>. Before you riot, remember — Jordan was also Defensive Player of the Year, and the profile (99 motor, 99 composure, elite processing, a 48-inch vertical) is a monster who wins every duel, every header, every psychological war. He'd bully strikers for 85 minutes, then stroll upfield and bury the winning penalty without blinking. And the flu game tells you what he does in a World Cup final. The one certainty: whatever position he plays, he keeps the receipts from everyone who doubted the experiment.`},
+ {id:'barry',   name:'Barry Sanders',      league:'LEGENDS', pos:'RB',  h:68, w:203, note:'2,053-yard season · Most elusive runner ever',
+  t:{pac:93,acc:98,agi:99,str:86,sta:88,jmp:90,coord:87,vis:86,cmp:90,mot:90},
+  blurb:`The single greatest change-of-direction athlete in American sports history — a 99 agility, the only one in the pool, on a 5'8" frame with no height tax at all. Barry made the best tacklers on earth fall down without touching them, which is just dribbling with extra steps removed. The engine prints <b>{dri}</b> on the ball and slots him in as a <b>{bestpos}</b> — wherever he starts, give him the ball in a phone booth and watch two defenders leave in an ambulance. The quiet ones are the scariest: he'd nutmeg a center back, score, hand the ball to the keeper, and jog back like nothing happened. He retired early once; hypothetical federations live in fear.`},
+ {id:'moss',    name:'Randy Moss',         league:'LEGENDS', pos:'WR',  h:76, w:210, note:'23 rookie TDs · You got Mossed',
+  t:{pac:97,acc:92,agi:88,str:82,sta:86,jmp:98,coord:90,vis:84,cmp:88,mot:78},
+  blurb:`Getting "Mossed" — outjumped, out-timed, posterized in mid-air — is already soccer's most valuable skill: it's called winning the back post. A 6'4" frame moving at <b>{pac}</b> pace with a 98 leap is Cristiano's aerial game grafted onto Tyreek's wheels, and the engine grades him a <b>{bestpos}</b> who turns every cross and every long ball into a jump-ball he does not lose. The 78 motor is the honest tax: "I play when I want to play" is a tough sell to a gegenpressing manager. But when he wants to play? Straight cash, homie.`},
+ {id:'iverson', name:'Allen Iverson',      league:'LEGENDS', pos:'PG',  h:72, w:165, note:'The Answer · MVP at 165 lbs · Killer crossover',
+  t:{pac:90,acc:95,agi:97,str:60,sta:92,jmp:88,coord:92,vis:88,cmp:84,mot:95},
+  blurb:`The crossover that dropped Jordan is the most famous ankle-breaker in sports, and ankle-breaking is literally the job of a wide creator. Pound for pound the most fearless athlete of his generation — and the receipts are real: Iverson was a Virginia state champion quarterback in high school before basketball won. The engine reads <b>{dri}</b> dribbling on a 165-pound frame that absorbed NBA contact for 14 years and never stopped getting up. Projects as a <b>{bestpos}</b> who plays every match like it's Game 7. We're talking about practice? He'd skip it and still torch your fullback.`},
+ {id:'reed',    name:'Ed Reed',            league:'LEGENDS', pos:'FS',  h:71, w:205, note:'Greatest ball-hawk ever · Saw the future',
+  t:{pac:88,acc:88,agi:88,str:78,sta:88,jmp:86,coord:84,vis:99,cmp:94,mot:92},
+  blurb:`The 99 vision is not a compliment, it's a measurement: Reed read quarterbacks' eyes, route combinations, and protection slides before the snap, then arrived at the catch point like he'd been mailed the script. That is a libero. The engine grades him a <b>{bestpos}</b>, but the position undersells the gift — he's Beckenbauer's job description in a ball-hawk's body: the last defender who starts every attack, intercepts passes the passer hasn't chosen yet, and turns your worst giveaway into his 60-yard return the other way. Every interception in his highlight reel is just a through-ball he caught on behalf of the other team.`},
+];
+
+/* soccer comparison players (FIFA-style prime ratings) */
+const COMPS = [
+ {id:'messi',    name:'Lionel Messi',      pos:'RW', s:{pac:80,dri:96,pas:93,sho:92,def:34,phy:66}},
+ {id:'mbappe',   name:'Kylian Mbappé',     pos:'LW', s:{pac:97,dri:92,pas:80,sho:90,def:36,phy:78}},
+ {id:'vini',     name:'Vinícius Jr',       pos:'LW', s:{pac:95,dri:93,pas:78,sho:84,def:30,phy:70}},
+ {id:'haaland',  name:'Erling Haaland',    pos:'ST', s:{pac:89,dri:80,pas:70,sho:93,def:42,phy:92}},
+ {id:'kdb',      name:'Kevin De Bruyne',   pos:'CM', s:{pac:74,dri:85,pas:95,sho:87,def:62,phy:76}},
+ {id:'bellingham',name:'Jude Bellingham',  pos:'CM', s:{pac:80,dri:87,pas:84,sho:84,def:76,phy:86}},
+ {id:'modric',   name:'Luka Modrić',       pos:'CM', s:{pac:70,dri:88,pas:92,sho:76,def:70,phy:66}},
+ {id:'rodri',    name:'Rodri',             pos:'DM', s:{pac:62,dri:80,pas:90,sho:76,def:89,phy:85}},
+ {id:'kante',    name:"N'Golo Kanté",      pos:'DM', s:{pac:78,dri:80,pas:78,sho:64,def:90,phy:84}},
+ {id:'hakimi',   name:'Achraf Hakimi',     pos:'FB', s:{pac:95,dri:84,pas:80,sho:74,def:78,phy:82}},
+ {id:'vvd',      name:'Virgil van Dijk',   pos:'CB', s:{pac:78,dri:72,pas:80,sho:60,def:92,phy:91}},
+ {id:'courtois', name:'Thibaut Courtois',  pos:'GK', gk:{ref:92,han:90,aer:95,dis:82,pos:94,swp:76}},
+ {id:'alisson',  name:'Alisson Becker',    pos:'GK', gk:{ref:90,han:88,aer:87,dis:90,pos:92,swp:91}},
+];
+const DEFAULT_COMP = {ST:'haaland', W:'mbappe', AM:'messi', CM:'kdb', DM:'rodri', FB:'hakimi', CB:'vvd', GK:'courtois'};
+
+const OPPONENTS = [
+ {name:'Argentina', flag:'🇦🇷', att:88, def:86},
+ {name:'France',    flag:'🇫🇷', att:89, def:86},
+ {name:'Spain',     flag:'🇪🇸', att:88, def:86},
+ {name:'Brazil',    flag:'🇧🇷', att:87, def:83},
+ {name:'England',   flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', att:86, def:85},
+ {name:'Germany',   flag:'🇩🇪', att:85, def:84},
+ {name:'Portugal',  flag:'🇵🇹', att:86, def:84},
+ {name:"McDavid's Canada", flag:'🇨🇦', att:86, def:83},
+ {name:"Ohtani's Japan", flag:'🇯🇵', att:85, def:81},
+ {name:'The Dominican Armada', flag:'🇩🇴', att:83, def:75},
+ {name:"Bolt's Jamaica", flag:'🇯🇲', att:81, def:72},
+ {name:"Giannis's Greece", flag:'🇬🇷', att:75, def:81},
+ {name:'Current USMNT', flag:'🇺🇸', att:77, def:76},
+];
+
+/* ================= TRANSLATION ENGINE ================= */
+const clamp=(v,lo=1,hi=99)=>Math.max(lo,Math.min(hi,v));
+const R=v=>Math.round(v);
+
+function translate(a, techPct){
+  const t = techPct/100;
+  const tech = 0.35 + 0.65*t;          // technical stats: floor + slider
+  const semi = 0.65 + 0.35*t;          // semi-technical (defending)
+  const gkC  = 0.55 + 0.45*t;          // keeper craft
+  const T = a.t, h = a.h;
+  const hTaxDri = Math.max(0, h-74)*1.2 + Math.max(0,h-79)*1.5;  // tall = harder to dribble low; 6'8"+ pays double
+  const hTaxPac = Math.max(0, h-76)*0.5 + Math.max(0,h-79)*1.0;
+  const hTaxDef = Math.max(0, h-78)*2.4;      // skyscrapers can't turn with quick attackers
+  const hTaxPhy = Math.max(0, h-78)*1.2;      // the 90-minute cost of hauling that frame
+  const strPow = 0.6*T.str + 0.4*T.jmp;
+
+  const pac = clamp(0.55*T.pac + 0.45*T.acc - hTaxPac);
+  const dri = clamp((0.55*T.coord + 0.27*T.agi + 0.18*T.vis)*tech - hTaxDri);
+  const pas = clamp((0.42*T.vis + 0.36*T.coord + 0.22*T.cmp)*tech);
+  const sho = clamp((0.52*T.coord + 0.24*T.cmp + 0.24*strPow)*tech);
+  const def = clamp((0.28*T.vis + 0.24*T.mot + 0.22*T.str + 0.14*T.agi + 0.12*T.pac)*semi - hTaxDef);
+  const phy = clamp(0.42*T.str + 0.30*T.sta + 0.28*T.jmp - hTaxPhy);
+  // goalkeeping is gated hard by frame: multiplicative height factor + reach bonus for giants
+  const hf    = 0.72 + 0.28*Math.max(0,Math.min(1,(h-70)/6));
+  const reach = Math.min(4, Math.max(0,(h-76)*0.8));
+  // agile giants get pushed toward goal: height is only free between the posts,
+  // but only if the agility survived the frame
+  const agiBonus = Math.max(0,h-78) * Math.max(0,T.agi-78) * 0.09;
+  const gk  = clamp((0.30*T.coord + 0.28*T.agi + 0.12*T.jmp + 0.18*T.vis + 0.12*T.str)*gkC*hf + reach + agiBonus);
+  return {pac,dri,pas,sho,def,phy,gk};
+}
+function gkDetail(a, techPct){
+  const t = techPct/100, T=a.t, tech=0.35+0.65*t;
+  const hScore = clamp(50 + (a.h-70)*5);
+  return {
+    ref: clamp(0.55*T.coord + 0.45*T.agi),
+    han: clamp((0.70*T.coord + 0.30*T.cmp)*(0.6+0.4*t)),
+    aer: clamp(0.5*T.jmp + 0.5*hScore),
+    dis: clamp((0.60*T.vis + 0.40*T.coord)*tech),
+    pos: clamp(0.60*T.vis + 0.40*T.cmp),
+    swp: clamp(0.5*T.pac + 0.5*T.vis),
+  };
+}
+
+const POSITIONS = {
+  ST:{sho:.42,pac:.18,dri:.14,phy:.14,pas:.12},
+  W: {pac:.36,dri:.30,sho:.14,pas:.12,phy:.08},
+  AM:{pas:.32,dri:.30,sho:.18,pac:.12,phy:.08},
+  CM:{pas:.36,dri:.18,def:.20,phy:.18,sho:.08},
+  DM:{def:.40,pas:.24,phy:.24,dri:.12},
+  FB:{pac:.28,def:.30,phy:.18,pas:.14,dri:.10},
+  CB:{def:.44,phy:.32,pas:.12,pac:.12},
+  GK:{gk:1},
+};
+const POS_LABEL={ST:'Striker',W:'Winger',AM:'Attacking Mid',CM:'Central Mid',DM:'Defensive Mid',FB:'Fullback',CB:'Center Back',GK:'Goalkeeper'};
+
+function positionFits(s){
+  const fits=[];
+  for(const [pos,w] of Object.entries(POSITIONS)){
+    let v=0; for(const [k,wt] of Object.entries(w)) v+=s[k]*wt;
+    fits.push({pos, raw:clamp(v), score:R(clamp(v))});
+  }
+  fits.sort((a,b)=>b.raw-a.raw);
+  return fits;
+}
+
+/* ================= STATE ================= */
+let techPct=85, pipePct=80;
+let selectedId='curry', selectedLeague='ALL', compOverride=null;
+/* pipeline gates technique: a weak development system caps how much any athlete's
+   gift can convert, no matter how coachable they are. pipe 50 → cap 77.5, pipe 100 → cap 100 */
+const effTech=()=>Math.min(techPct, 55 + 0.45*pipePct);
+
+/* ================= RENDER: PICKER ================= */
+const LEAGUES=['ALL','NBA','NFL','NHL','MLB','WNBA','TRACK','COMBAT','OLYMPIC','LEGENDS'];
+function renderTabs(){
+  document.getElementById('leagueTabs').innerHTML = LEAGUES.map(l=>
+    `<button class="league-tab ${l===selectedLeague?'active':''}" data-l="${l}">${l==='ALL'?'All Leagues':l}</button>`).join('');
+}
+function renderGrid(){
+  const ORD=Object.fromEntries(LEAGUES.map((l,i)=>[l,i]));
+  const list = ATHLETES.filter(a=>selectedLeague==='ALL'||a.league===selectedLeague)
+    .slice().sort((a,b)=>(ORD[a.league]??99)-(ORD[b.league]??99));
+  document.getElementById('athleteGrid').innerHTML = list.map(a=>
+    `<button class="athlete-chip ${a.id===selectedId?'active':''}" data-id="${a.id}">${a.name}${a.nat?' '+a.nat.flag:''}<span class="lg">${a.league}</span></button>`).join('');
+}
+
+/* ================= RENDER: CARDS ================= */
+const RAW_LABELS={pac:'Top Speed',acc:'Burst',agi:'Agility',str:'Strength',sta:'Engine',jmp:'Leap',coord:'Fine Motor',vis:'Sport IQ',cmp:'Composure',mot:'Motor'};
+const SOC_LABELS={pac:'Pace',dri:'Dribbling',pas:'Passing',sho:'Shooting',def:'Defending',phy:'Physical'};
+
+function attrRows(obj, labels, barClass){
+  return Object.entries(labels).map(([k,lbl])=>{
+    const v=R(obj[k]);
+    return `<div class="attr-row"><span class="nm">${lbl}</span>
+      <div class="bar ${barClass}"><i style="width:${v}%"></i></div>
+      <span class="val">${v}</span></div>`;
+  }).join('');
+}
+function ftIn(h){return `${Math.floor(h/12)}'${h%12}"`;}
+
+function renderStage(){
+  const a = ATHLETES.find(x=>x.id===selectedId);
+  const s = translate(a, effTech());
+  const fits = positionFits(s);
+  const best = fits[0];
+
+  document.getElementById('usCard').innerHTML = `
+    <div class="card-tag">Before // ${a.league} · ${a.pos}</div>
+    <h3>${a.name}</h3>
+    <div class="meta"><span>${ftIn(a.h)}</span><span>${a.w} lbs</span><span>${a.note}</span>${a.nat?`<span style="color:var(--red)">${a.nat.flag} CAP-TIED: ${a.nat.country.toUpperCase()}</span>`:''}</div>
+    ${attrRows(a.t, RAW_LABELS, 'red')}`;
+
+  const isGK = best.pos==='GK';
+  document.getElementById('socCard').innerHTML = `
+    <div class="card-tag">After // Soccer Projection</div>
+    <div class="ovr-line">
+      <span class="ovr-big">${best.score}</span>
+      <span class="ovr-lbl">Overall<br>as a</span>
+      <span class="pos-pill">${POS_LABEL[best.pos]}</span>
+    </div>
+    ${isGK
+      ? attrRows(gkDetail(a,effTech()), {ref:'Reflexes',han:'Handling',aer:'Aerial',dis:'Distribution',pos:'Positioning',swp:'Sweeping'}, 'volt')
+      : attrRows(s, SOC_LABELS, 'volt')}
+    <div class="fits"><h4>Position Fit</h4>
+      ${fits.slice(0,5).map((f,i)=>`
+        <div class="fit-row ${i===0?'best':''}"><span class="fp">${f.pos}</span>
+        <div class="bar ${i===0?'volt':'red'}"><i style="width:${f.score}%"></i></div>
+        <span class="val" style="font-family:var(--mono);font-size:12px;font-weight:700;text-align:right">${f.score}</span></div>`).join('')}
+    </div>`;
+
+  renderRadar(a, s, best);
+  renderVerdict(a, s, best);
+}
+
+/* ================= RADAR ================= */
+function radarSVG(axes, seriesA, seriesB, nameA, nameB){
+  const size=340, cx=size/2, cy=size/2, rMax=118, n=axes.length;
+  const pt=(i,v)=>{const ang=-Math.PI/2 + i*2*Math.PI/n; const r=rMax*v/100;
+    return [cx+r*Math.cos(ang), cy+r*Math.sin(ang)];};
+  const ring=f=>axes.map((_,i)=>pt(i,f*100).join(',')).join(' ');
+  const poly=vals=>axes.map((x,i)=>pt(i,vals[i]).join(',')).join(' ');
+  const labels=axes.map((ax,i)=>{
+    const [x,y]=pt(i,124);
+    return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle"
+      font-family="Spline Sans Mono" font-size="10.5" letter-spacing="1.5" fill="#a8a795">${ax}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${size} ${size}" style="width:100%;max-width:400px;display:block;margin:0 auto">
+    ${[.25,.5,.75,1].map(f=>`<polygon points="${ring(f)}" fill="none" stroke="rgba(240,237,224,.1)" stroke-width="1"/>`).join('')}
+    ${axes.map((_,i)=>{const[x,y]=pt(i,100);return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="rgba(240,237,224,.08)"/>`}).join('')}
+    <polygon points="${poly(seriesB)}" fill="rgba(91,140,255,.16)" stroke="#5b8cff" stroke-width="2"/>
+    <polygon points="${poly(seriesA)}" fill="rgba(255,74,61,.18)" stroke="#ff4a3d" stroke-width="2.5"/>
+    ${labels}</svg>`;
+}
+
+function renderRadar(a, s, best){
+  const isGK = best.pos==='GK';
+  // eligible comps: GKs for GK athletes, outfield otherwise
+  const eligible = COMPS.filter(c=> isGK ? c.pos==='GK' : c.pos!=='GK');
+  let compId = compOverride && eligible.some(c=>c.id===compOverride) ? compOverride : DEFAULT_COMP[best.pos] || eligible[0].id;
+  const comp = COMPS.find(c=>c.id===compId);
+
+  document.getElementById('compSelect').innerHTML = eligible.map(c=>
+    `<option value="${c.id}" ${c.id===compId?'selected':''}>vs ${c.name} (${c.pos})</option>`).join('');
+  const shortName=n=>{const p=n.split(' ');if(p[p.length-1]==='Jr')return p[0];return p.slice(1).join(' ')||p[0];};
+  document.getElementById('radarTitle').innerHTML =
+    `<span class="a">${shortName(a.name)}</span> vs <span class="b">${shortName(comp.name)}</span>`;
+  document.getElementById('radarLegend').innerHTML =
+    `<span><i style="background:#ff4a3d"></i>${a.name} (projected)</span><span><i style="background:#5b8cff"></i>${comp.name} (real)</span>`;
+
+  let axes, va, vb;
+  if(isGK){
+    const g = gkDetail(a, effTech());
+    axes=['REF','HAN','AER','DIS','POS','SWP'];
+    va=[g.ref,g.han,g.aer,g.dis,g.pos,g.swp].map(R);
+    vb=[comp.gk.ref,comp.gk.han,comp.gk.aer,comp.gk.dis,comp.gk.pos,comp.gk.swp];
+  }else{
+    axes=['PAC','DRI','PAS','SHO','DEF','PHY'];
+    va=[s.pac,s.dri,s.pas,s.sho,s.def,s.phy].map(R);
+    vb=[comp.s.pac,comp.s.dri,comp.s.pas,comp.s.sho,comp.s.def,comp.s.phy];
+  }
+  document.getElementById('radarBox').innerHTML = radarSVG(axes, va, vb, a.name, comp.name);
+}
+
+/* ================= VERDICT ================= */
+function renderVerdict(a, s, best){
+  const g = gkDetail(a,effTech());
+  const gkOvr = positionFits(s).find(f=>f.pos==='GK').score;
+  let text = a.blurb
+    .replace('{dri}', `<span class="num">${R(s.dri)}</span>`)
+    .replace('{pac}', `<span class="num">${R(s.pac)}</span>`)
+    .replace('{pas}', `<span class="num">${R(s.pas)}</span>`)
+    .replace('{sho}', `<span class="num">${R(s.sho)}</span>`)
+    .replace('{gk}',  `<span class="num">${gkOvr}</span>`)
+    .replace('{bestovr}', `<span class="num">${best.score}</span>`)
+    .replace(/\{bestpos\}/g, `<b>${POS_LABEL[best.pos]}</b>`);
+  document.getElementById('verdictBody').innerHTML = text;
+
+  const st = document.getElementById('verdictStamp');
+  if(best.score>=88){st.className='stamp elite';st.textContent='★ World Class';}
+  else if(best.score>=82){st.className='stamp good';st.textContent='Champions League Starter';}
+  else if(best.score>=74){st.className='stamp mid';st.textContent='Solid Pro';}
+  else{st.className='stamp bust';st.textContent='Stick to the Day Job';}
+}
+
+/* ================= USA XI ================= */
+const SLOTS=[
+  {key:'GK', pos:'GK', x:50, y:92},
+  {key:'RB', pos:'FB', x:84, y:74},
+  {key:'RCB',pos:'CB', x:63, y:80},
+  {key:'LCB',pos:'CB', x:37, y:80},
+  {key:'LB', pos:'FB', x:16, y:74},
+  {key:'DM', pos:'DM', x:50, y:63},
+  {key:'CM', pos:'CM', x:68, y:48},
+  {key:'AM', pos:'AM', x:32, y:48},
+  {key:'RW', pos:'W',  x:82, y:26},
+  {key:'LW', pos:'W',  x:18, y:26},
+  {key:'ST', pos:'ST', x:50, y:14},
+];
+
+function buildXI(){
+  const pool = ATHLETES.filter(a=>!a.nat).map(a=>{
+    const s=translate(a,effTech());
+    const fits=positionFits(s);
+    const fitMap=Object.fromEntries(fits.map(f=>[f.pos,f.score]));
+    return {a,s,fits,fitMap,best:fits[0]};
+  });
+  // greedy global assignment: repeatedly take highest (athlete, slot) fit
+  const slotsLeft=[...SLOTS]; const used=new Set(); const xi=[];
+  while(slotsLeft.length){
+    let bestPick=null;
+    for(const slot of slotsLeft){
+      for(const p of pool){
+        if(used.has(p.a.id)) continue;
+        const sc=p.fitMap[slot.pos];
+        if(!bestPick || sc>bestPick.sc) bestPick={slot,p,sc};
+      }
+    }
+    xi.push({...bestPick.slot, athlete:bestPick.p.a, ovr:bestPick.sc});
+    used.add(bestPick.p.a.id);
+    slotsLeft.splice(slotsLeft.indexOf(bestPick.slot),1);
+  }
+  const bench = pool.filter(p=>!used.has(p.a.id))
+    .sort((x,y)=>y.best.score-x.best.score)
+    .map(p=>({athlete:p.a, pos:p.best.pos, ovr:p.best.score}));
+  const capTied = ATHLETES.filter(a=>a.nat).map(a=>{
+    const best = positionFits(translate(a,effTech()))[0];
+    return {athlete:a, pos:best.pos, ovr:best.score};
+  }).sort((x,y)=>y.ovr-x.ovr);
+  return {xi, bench, capTied};
+}
+
+function teamRatings(xi){
+  const get=k=>xi.find(s=>s.key===k).ovr;
+  const att=(get('ST')+get('LW')+get('RW')+get('AM'))/4;
+  const def=(get('GK')+get('RB')+get('LB')+get('RCB')+get('LCB')+get('DM'))/6;
+  const mid=(get('CM')+get('AM')+get('DM'))/3;
+  const cohesion=(pipePct-80)*0.08;           // pipeline slider: ±1.6 pts
+  return {att:att+cohesion, def:def+cohesion, mid, ovr:(att+def)/2+cohesion};
+}
+
+function renderXI(){
+  const {xi,bench,capTied}=buildXI();
+  const tr=teamRatings(xi);
+  const pitch=document.getElementById('pitch');
+  pitch.querySelectorAll('.player-dot').forEach(e=>e.remove());
+  for(const s of xi){
+    const el=document.createElement('div');
+    el.className='player-dot'+(s.key==='GK'?' gkdot':'');
+    el.style.left=s.x+'%'; el.style.top=s.y+'%';
+    el.innerHTML=`<div class="disc"><span class="r8">${R(s.ovr)}</span><span class="p8">${s.key}</span></div>
+      <div class="nm8">${s.athlete.name.split(' ').pop()}</div>`;
+    el.onclick=()=>{selectedId=s.athlete.id;compOverride=null;renderGrid();renderStage();document.getElementById('lab').scrollIntoView({behavior:'smooth'});};
+    pitch.appendChild(el);
+  }
+  document.getElementById('trAtt').textContent=R(tr.att);
+  document.getElementById('trDef').textContent=R(tr.def);
+  document.getElementById('trOvr').textContent=R(tr.ovr);
+  document.getElementById('benchList').innerHTML=bench.map(b=>
+    `<div class="bench-row"><span>${b.athlete.name} <span class="bp">${b.pos}</span></span><span class="bo">${b.ovr}</span></div>`).join('')
+    +`<div class="bench-row" style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px"><span class="bp" style="letter-spacing:.16em">CAP-TIED ELSEWHERE</span><span></span></div>`
+    +capTied.slice(0,10).map(b=>
+    `<div class="bench-row"><span>${b.athlete.nat.flag} ${b.athlete.name} <span class="bp">${b.pos}</span></span><span class="bo">${b.ovr}</span></div>`).join('')
+    +(capTied.length>10?`<div class="bench-row"><span class="bp">+ ${capTied.length-10} more playing for somebody else</span><span></span></div>`:'');
+  return tr;
+}
+
+/* ================= WORLD SIM ================= */
+function poisson(lambda){
+  const L=Math.exp(-lambda); let k=0,p=1;
+  do{k++;p*=Math.random();}while(p>L);
+  return k-1;
+}
+function simMatches(usa, opp, n=1500){
+  let w=0,d=0,l=0,gf=0,ga=0;
+  const lU=clamp(1.30*Math.exp((usa.att-opp.def)/14),0.15,4.8);
+  const lO=clamp(1.30*Math.exp((opp.att-usa.def)/14),0.15,4.8);
+  for(let i=0;i<n;i++){
+    const a=poisson(lU),b=poisson(lO);
+    gf+=a;ga+=b;
+    if(a>b)w++;else if(a===b)d++;else l++;
+  }
+  return {w:w/n,d:d/n,l:l/n,gf:gf/n,ga:ga/n};
+}
+function estRank(r){
+  const ref=[[90,1],[87.5,2],[86,4],[84,8],[82,13],[79,22],[76,32],[72,55],[68,85]];
+  if(r>=ref[0][0])return 1;
+  for(let i=0;i<ref.length-1;i++){
+    const [r1,k1]=ref[i],[r2,k2]=ref[i+1];
+    if(r<=r1&&r>=r2)return R(k1+(r1-r)/(r1-r2)*(k2-k1));
+  }
+  return 100;
+}
+function runSim(){
+  const tr=renderXI();
+  const usa={att:tr.att,def:tr.def};
+  const rows=OPPONENTS.map(o=>({o,res:simMatches(usa,o)}));
+  document.getElementById('resBody').innerHTML=rows.map(({o,res})=>`
+    <tr><td class="opp"><span class="flag">${o.flag}</span>${o.name}</td>
+    <td><span class="wbar">
+      <span class="w" style="width:${res.w*120}px"></span>
+      <span class="d" style="width:${res.d*120}px"></span>
+      <span class="l" style="width:${res.l*120}px"></span></span></td>
+    <td class="pct r"><b>${R(res.w*100)}</b> / ${R(res.d*100)} / ${R(res.l*100)}</td>
+    <td class="pct r">${res.gf.toFixed(1)} – ${res.ga.toFixed(1)}</td></tr>`).join('');
+
+  // knockout gauntlet: beat a composite elite side 4x (draws → 50/50 shootout)
+  const elite={att:87.4,def:85.2};
+  const e=simMatches(usa,elite,4000);
+  const pKO=e.w+e.d*0.5;
+  const wc=Math.pow(pKO,3)*0.85;   // 3 elite knockout wins; earlier rounds folded into the 0.85
+  const rank=estRank(tr.ovr);
+  document.getElementById('bvRank').textContent='#'+rank;
+  document.getElementById('bvWC').textContent=R(wc*100)+'%';
+
+  let vt;
+  if(wc>=0.22) vt=`<b>Yes — this team runs world football.</b> At these assumptions the hypothetical USA XI rates <b>#${rank} on Earth</b> and wins roughly one of every ${Math.max(2,R(1/wc))} World Cups — Brazil-in-their-prime territory. The engine's honest conclusion: America's raw athlete pool was never the question. Route the Currys, Tyreeks and LeBrons into academies at age six and the talent avalanche buries everyone.`;
+  else if(wc>=0.12) vt=`<b>A genuine superpower.</b> Ranked <b>#${rank}</b>, winning a World Cup about every ${Math.max(2,R(1/wc))} cycles — on par with Argentina, France and Brazil. Not automatic dominance (technique and football culture still matter), but permanently in the last-eight conversation with the most terrifying athletic ceiling in the sport.`;
+  else if(wc>=0.05) vt=`<b>A dark horse, not a dynasty.</b> Ranked <b>#${rank}</b> — dangerous, physical, capable of beating anyone in a one-off. But at this technique-transfer level, the craft gap to Argentina and Spain shows up in knockout football. Nudge the transfer slider up if you believe in the academies.`;
+  else vt=`<b>Athletic, but raw.</b> All the fast-twitch in the world, ranked just <b>#${rank}</b>. At low technique transfer the engine sides with the skeptics: soccer is a 10,000-hour touch sport, and sprint speed alone doesn't unlock a low block. Great athletes, wrong toolbox.`;
+  document.getElementById('bvText').innerHTML=vt;
+  document.getElementById('simResults').classList.add('show');
+}
+
+/* ================= WIRING ================= */
+document.getElementById('leagueTabs').addEventListener('click',e=>{
+  const b=e.target.closest('.league-tab'); if(!b)return;
+  selectedLeague=b.dataset.l; renderTabs(); renderGrid();
+});
+document.getElementById('athleteGrid').addEventListener('click',e=>{
+  const b=e.target.closest('.athlete-chip'); if(!b)return;
+  selectedId=b.dataset.id; compOverride=null; renderGrid(); renderStage();
+});
+document.getElementById('compSelect').addEventListener('change',e=>{
+  compOverride=e.target.value; renderStage();
+});
+function updateTechVal(){
+  const et=R(effTech());
+  const el=document.getElementById('techVal');
+  if(et<techPct){
+    el.textContent=`${techPct}→${et}%`;
+    el.style.color='var(--red)';
+    el.title='Capped by pipeline quality';
+  }else{
+    el.textContent=techPct+'%';
+    el.style.color='';
+    el.title='';
+  }
+}
+document.getElementById('techSlider').addEventListener('input',e=>{
+  techPct=+e.target.value;
+  updateTechVal();
+  renderStage(); renderXI();
+  document.getElementById('simResults').classList.remove('show');
+});
+document.getElementById('pipeSlider').addEventListener('input',e=>{
+  pipePct=+e.target.value;
+  document.getElementById('pipeVal').textContent=pipePct+'%';
+  updateTechVal();
+  renderStage(); renderXI();
+  document.getElementById('simResults').classList.remove('show');
+});
+document.getElementById('simBtn').addEventListener('click',runSim);
+
+renderTabs(); renderGrid(); updateTechVal(); renderStage(); renderXI();
+</script>
+</body>
+</html>
