@@ -330,6 +330,42 @@ select.comp-select{
   .rk-num .of{display:none}
 }
 
+/* ---------- CATEGORY LEADERS ---------- */
+.pro-b{color:var(--volt)}
+.qual-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.qual-tab{
+  font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.05em;text-transform:uppercase;
+  background:none;border:1px solid var(--line);color:var(--chalk-dim);padding:8px 18px;cursor:pointer;transition:all .15s;
+}
+.qual-tab:hover{border-color:var(--chalk);color:var(--chalk)}
+.qual-tab.active{background:var(--volt);color:var(--bg);border-color:var(--volt)}
+.qual-list{border:1px solid var(--line);border-top:3px solid var(--volt);background:var(--panel)}
+.qual-row{
+  display:grid;grid-template-columns:50px 1fr 150px 40px;gap:14px;align-items:center;
+  padding:8px 20px;border-bottom:1px solid var(--line2);transition:background .12s;
+}
+.qual-row:last-child{border-bottom:none}
+.qual-row.ath{cursor:pointer}
+.qual-row.ath:hover{background:var(--panel2)}
+.qual-row.pro{background:linear-gradient(90deg,rgba(214,251,63,.07),transparent 55%)}
+.ql-num{font-family:var(--display);font-weight:800;font-size:20px;color:var(--chalk-dim);text-align:right}
+.ql-num.top{color:var(--volt)}
+.ql-name{font-family:var(--body);font-weight:600;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ql-name .flag{margin-left:5px}
+.ql-name .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-dim);margin-left:8px}
+.qual-row.pro .ql-name{color:var(--volt)}
+.qual-row.pro .ql-name .tag{color:var(--volt);opacity:.85}
+.ql-bar{height:7px;background:rgba(240,237,224,.08);border-radius:2px;overflow:hidden}
+.ql-bar i{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,#5a7a1a,var(--volt))}
+.qual-row.pro .ql-bar i{background:linear-gradient(90deg,#3a5aa0,var(--blue))}
+.ql-val{font-family:var(--display);font-weight:800;font-size:19px;color:var(--volt);text-align:right}
+.qual-row.pro .ql-val{color:var(--blue)}
+@media(max-width:640px){
+  .qual-row{grid-template-columns:40px 1fr 40px;gap:10px;padding:8px 13px}
+  .ql-bar{display:none}
+  .ql-num{font-size:17px}.ql-val{font-size:16px}
+}
+
 /* ---------- WORLD SIM ---------- */
 .sim-cta{
   display:block;margin:0 auto;font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:.05em;
@@ -506,9 +542,20 @@ footer .logo span{color:var(--volt)}
     </div>
   </section>
 
+  <!-- CATEGORY LEADERS -->
+  <section id="leaders">
+    <div class="sec-head"><span class="sec-num">04</span><h2>The Category Leaders</h2></div>
+    <p class="sec-desc">The whole pool ranked by a single soccer quality — with the <b class="pro-b">real footballers</b> they're
+    measured against thrown into the mix. Sort by <b>Pace</b> and Tyreek and Bolt land right next to Mbappé and Alphonso Davies;
+    sort by <b>Dribbling</b> to see where Curry and Kyrie fall against Messi. Top 30 for each attribute. Updates live with the
+    assumption sliders. Click an athlete to open them in the Lab.</p>
+    <div class="qual-tabs" id="qualTabs"></div>
+    <div class="qual-list" id="qualList"></div>
+  </section>
+
   <!-- WORLD SIM -->
   <section id="sim">
-    <div class="sec-head"><span class="sec-num">04</span><h2>Simulate The World</h2></div>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Simulate The World</h2></div>
     <p class="sec-desc">1,500 Monte Carlo matches against each football superpower (Poisson goal model driven by
     attack-vs-defense rating gaps), plus a knockout-gauntlet estimate of World Cup win probability.</p>
     <button class="sim-cta" id="simBtn">Run the World Cup »</button>
@@ -1590,6 +1637,31 @@ function renderRanks(){
   }
 }
 
+/* ================= CATEGORY LEADERS ================= */
+const QUAL={pac:'Pace',dri:'Dribbling',pas:'Passing',sho:'Shooting',def:'Defending',phy:'Physical'};
+let qualSort='pac';
+function renderQualTabs(){
+  document.getElementById('qualTabs').innerHTML = Object.entries(QUAL).map(([k,lbl])=>
+    `<button class="qual-tab ${k===qualSort?'active':''}" data-q="${k}">${lbl}</button>`).join('');
+}
+function renderQual(){
+  const et=effTech();
+  // American athletes (translated) + the real footballers (outfield comps) in one pool
+  const pool = ATHLETES.map(a=>{const s=translate(a,et); return {name:a.name,tag:a.league,nat:a.nat,pro:false,id:a.id,v:{pac:R(s.pac),dri:R(s.dri),pas:R(s.pas),sho:R(s.sho),def:R(s.def),phy:R(s.phy)}};})
+    .concat(COMPS.filter(c=>c.s).map(c=>({name:c.name,tag:POS_LABEL[c.pos],pro:true,id:c.id,v:c.s})));
+  pool.sort((x,y)=> y.v[qualSort]-x.v[qualSort] || (x.pro-y.pro) || x.name.localeCompare(y.name));
+  const top=pool.slice(0,30);
+  document.getElementById('qualList').innerHTML = top.map((r,i)=>{
+    const flag=r.nat?` <span class="flag">${r.nat.flag}</span>`:'';
+    const tag= r.pro ? `⚽ ${r.tag}` : r.tag;
+    return `<div class="qual-row ${r.pro?'pro':'ath'}" ${r.pro?'':`data-id="${r.id}"`}>
+      <span class="ql-num ${i===0?'top':''}">${i+1}</span>
+      <span class="ql-name">${r.name}${flag}<span class="tag">${tag}</span></span>
+      <span class="ql-bar"><i style="width:${r.v[qualSort]}%"></i></span>
+      <span class="ql-val">${r.v[qualSort]}</span></div>`;
+  }).join('');
+}
+
 /* ================= WORLD SIM ================= */
 function poisson(lambda){
   const L=Math.exp(-lambda); let k=0,p=1;
@@ -1684,14 +1756,14 @@ function updateTechVal(){
 document.getElementById('techSlider').addEventListener('input',e=>{
   techPct=+e.target.value;
   updateTechVal();
-  renderStage(); renderXI(); renderRanks();
+  renderStage(); renderXI(); renderRanks(); renderQual();
   document.getElementById('simResults').classList.remove('show');
 });
 document.getElementById('pipeSlider').addEventListener('input',e=>{
   pipePct=+e.target.value;
   document.getElementById('pipeVal').textContent=pipePct+'%';
   updateTechVal();
-  renderStage(); renderXI(); renderRanks();
+  renderStage(); renderXI(); renderRanks(); renderQual();
   document.getElementById('simResults').classList.remove('show');
 });
 document.getElementById('simBtn').addEventListener('click',runSim);
@@ -1723,8 +1795,20 @@ document.getElementById('rankList').addEventListener('click',e=>{
   document.getElementById('lab').scrollIntoView({behavior:'smooth'});
 });
 
+/* category leaders interactions */
+document.getElementById('qualTabs').addEventListener('click',e=>{
+  const b=e.target.closest('.qual-tab'); if(!b)return;
+  qualSort=b.dataset.q; renderQualTabs(); renderQual();
+});
+document.getElementById('qualList').addEventListener('click',e=>{
+  const row=e.target.closest('.qual-row.ath'); if(!row||!row.dataset.id)return;
+  selectedId=row.dataset.id; compOverride=null;
+  selectedLeague='ALL'; renderTabs(); renderGrid(); renderStage();
+  document.getElementById('lab').scrollIntoView({behavior:'smooth'});
+});
+
 renderTabs(); renderGrid(); updateTechVal(); renderStage(); renderXI();
-renderRankTabs(); renderRanks();
+renderRankTabs(); renderRanks(); renderQualTabs(); renderQual();
 </script>
 </body>
 </html>
