@@ -106,6 +106,7 @@ main{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 28px}
   border:3px solid var(--bg);box-shadow:0 0 0 1.5px var(--volt);cursor:grab;
 }
 .slider-val{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--volt);min-width:44px;text-align:right}
+@media(max-width:640px){.slider-group{min-width:100%}.slider-group input[type=range]{min-width:0}.assumptions-inner{gap:12px}}
 .slider-hint{position:relative;cursor:help}
 .slider-hint:hover::after{
   content:attr(data-tip);position:absolute;top:130%;left:0;width:260px;max-width:260px;background:var(--panel2);
@@ -332,7 +333,7 @@ select.comp-select{
 .sim-results.show{display:block;animation:rise .6s cubic-bezier(.2,.7,.2,1)}
 .res-grid{display:grid;grid-template-columns:1.3fr .7fr;gap:24px;align-items:stretch}
 @media(max-width:900px){.res-grid{grid-template-columns:1fr}}
-.res-table{background:var(--panel);border:1px solid var(--line);padding:8px 24px 18px}
+.res-table{background:var(--panel);border:1px solid var(--line);padding:8px 24px 18px;overflow-x:auto}
 .res-table table{width:100%;border-collapse:collapse}
 .res-table th{
   font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--chalk-dim);
@@ -1626,7 +1627,7 @@ function renderRanks(){
   renderRankHead();
   const numCls=v=> v===1?'gold':v<=3?'':'dim';
   document.getElementById('rankList').innerHTML = total ? page.map((r,i)=>{
-    const leader = i===0 ? ' leader' : '';
+    const leader = (rankDir===1 && i===0) ? ' leader' : ''; // only highlight the genuine top (best-first)
     const flag=r.a.nat?` <span class="flag">${r.a.nat.flag}</span>`:'';
     return `<div class="rank-row${leader}" data-id="${r.a.id}">
       <span class="rk-num ${numCls(r.sportRank)}"><span class="hash">#</span>${r.sportRank}<span class="of">of ${r.sportTotal}</span></span>
