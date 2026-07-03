@@ -1163,20 +1163,48 @@ const ATHLETES = [
 ];
 
 /* soccer comparison players (FIFA-style prime ratings) */
+/* top real footballers, 3-4 per position, prime/current FIFA-style ratings — the yardstick */
 const COMPS = [
- {id:'messi',    name:'Lionel Messi',      pos:'RW', s:{pac:80,dri:96,pas:93,sho:92,def:34,phy:66}},
- {id:'mbappe',   name:'Kylian Mbappé',     pos:'LW', s:{pac:97,dri:92,pas:80,sho:90,def:36,phy:78}},
- {id:'vini',     name:'Vinícius Jr',       pos:'LW', s:{pac:95,dri:93,pas:78,sho:84,def:30,phy:70}},
+ // Strikers
  {id:'haaland',  name:'Erling Haaland',    pos:'ST', s:{pac:89,dri:80,pas:70,sho:93,def:42,phy:92}},
+ {id:'kane',     name:'Harry Kane',        pos:'ST', s:{pac:68,dri:83,pas:85,sho:93,def:47,phy:83}},
+ {id:'lewa',     name:'Robert Lewandowski',pos:'ST', s:{pac:74,dri:85,pas:77,sho:92,def:40,phy:82}},
+ {id:'lautaro',  name:'Lautaro Martínez',  pos:'ST', s:{pac:86,dri:84,pas:75,sho:88,def:45,phy:80}},
+ // Wingers
+ {id:'mbappe',   name:'Kylian Mbappé',     pos:'W',  s:{pac:97,dri:92,pas:80,sho:90,def:36,phy:78}},
+ {id:'vini',     name:'Vinícius Jr',       pos:'W',  s:{pac:95,dri:93,pas:78,sho:84,def:30,phy:70}},
+ {id:'salah',    name:'Mohamed Salah',     pos:'W',  s:{pac:90,dri:89,pas:81,sho:89,def:45,phy:75}},
+ {id:'saka',     name:'Bukayo Saka',       pos:'W',  s:{pac:86,dri:87,pas:82,sho:83,def:58,phy:72}},
+ // Attacking mids
+ {id:'messi',    name:'Lionel Messi',      pos:'AM', s:{pac:80,dri:96,pas:93,sho:92,def:34,phy:66}},
+ {id:'odegaard', name:'Martin Ødegaard',   pos:'AM', s:{pac:75,dri:88,pas:90,sho:80,def:58,phy:64}},
+ {id:'wirtz',    name:'Florian Wirtz',     pos:'AM', s:{pac:82,dri:89,pas:88,sho:80,def:56,phy:68}},
+ {id:'palmer',   name:'Cole Palmer',       pos:'AM', s:{pac:76,dri:87,pas:86,sho:86,def:50,phy:72}},
+ // Central mids
  {id:'kdb',      name:'Kevin De Bruyne',   pos:'CM', s:{pac:74,dri:85,pas:95,sho:87,def:62,phy:76}},
  {id:'bellingham',name:'Jude Bellingham',  pos:'CM', s:{pac:80,dri:87,pas:84,sho:84,def:76,phy:86}},
+ {id:'valverde', name:'Federico Valverde', pos:'CM', s:{pac:88,dri:82,pas:84,sho:82,def:82,phy:88}},
  {id:'modric',   name:'Luka Modrić',       pos:'CM', s:{pac:70,dri:88,pas:92,sho:76,def:70,phy:66}},
+ // Defensive mids
  {id:'rodri',    name:'Rodri',             pos:'DM', s:{pac:62,dri:80,pas:90,sho:76,def:89,phy:85}},
+ {id:'rice',     name:'Declan Rice',       pos:'DM', s:{pac:78,dri:80,pas:82,sho:74,def:87,phy:88}},
  {id:'kante',    name:"N'Golo Kanté",      pos:'DM', s:{pac:78,dri:80,pas:78,sho:64,def:90,phy:84}},
+ {id:'casemiro', name:'Casemiro',          pos:'DM', s:{pac:60,dri:72,pas:76,sho:72,def:87,phy:88}},
+ // Fullbacks
  {id:'hakimi',   name:'Achraf Hakimi',     pos:'FB', s:{pac:95,dri:84,pas:80,sho:74,def:78,phy:82}},
+ {id:'trent',    name:'Trent Alexander-Arnold',pos:'FB', s:{pac:76,dri:84,pas:92,sho:76,def:76,phy:72}},
+ {id:'davies',   name:'Alphonso Davies',   pos:'FB', s:{pac:96,dri:85,pas:78,sho:66,def:77,phy:76}},
+ {id:'theo',     name:'Theo Hernández',    pos:'FB', s:{pac:93,dri:83,pas:77,sho:74,def:75,phy:84}},
+ // Center backs
  {id:'vvd',      name:'Virgil van Dijk',   pos:'CB', s:{pac:78,dri:72,pas:80,sho:60,def:92,phy:91}},
+ {id:'dias',     name:'Rúben Dias',        pos:'CB', s:{pac:66,dri:70,pas:78,sho:42,def:91,phy:86}},
+ {id:'saliba',   name:'William Saliba',    pos:'CB', s:{pac:86,dri:74,pas:76,sho:38,def:89,phy:86}},
+ {id:'rudiger',  name:'Antonio Rüdiger',   pos:'CB', s:{pac:82,dri:68,pas:70,sho:42,def:88,phy:88}},
+ // Goalkeepers
  {id:'courtois', name:'Thibaut Courtois',  pos:'GK', gk:{ref:92,han:90,aer:95,dis:82,pos:94,swp:76}},
  {id:'alisson',  name:'Alisson Becker',    pos:'GK', gk:{ref:90,han:88,aer:87,dis:90,pos:92,swp:91}},
+ {id:'ederson',  name:'Ederson',           pos:'GK', gk:{ref:85,han:84,aer:83,dis:95,pos:88,swp:90}},
+ {id:'donnarumma',name:'Gianluigi Donnarumma',pos:'GK', gk:{ref:91,han:85,aer:88,dis:78,pos:90,swp:70}},
 ];
 const DEFAULT_COMP = {ST:'haaland', W:'mbappe', AM:'messi', CM:'kdb', DM:'rodri', FB:'hakimi', CB:'vvd', GK:'courtois'};
 
@@ -1364,8 +1392,13 @@ function renderRadar(a, s, best){
   let compId = compOverride && eligible.some(c=>c.id===compOverride) ? compOverride : DEFAULT_COMP[best.pos] || eligible[0].id;
   const comp = COMPS.find(c=>c.id===compId);
 
-  document.getElementById('compSelect').innerHTML = eligible.map(c=>
-    `<option value="${c.id}" ${c.id===compId?'selected':''}>vs ${c.name} (${c.pos})</option>`).join('');
+  const opt=c=>`<option value="${c.id}" ${c.id===compId?'selected':''}>vs ${c.name}</option>`;
+  document.getElementById('compSelect').innerHTML = isGK
+    ? eligible.map(opt).join('')
+    : ['ST','W','AM','CM','DM','FB','CB'].map(p=>{
+        const grp=eligible.filter(c=>c.pos===p); if(!grp.length) return '';
+        return `<optgroup label="${POS_LABEL[p]}">${grp.map(opt).join('')}</optgroup>`;
+      }).join('');
   const shortName=n=>{const p=n.split(' ');if(p[p.length-1]==='Jr')return p[0];return p.slice(1).join(' ')||p[0];};
   document.getElementById('radarTitle').innerHTML =
     `<span class="a">${shortName(a.name)}</span> vs <span class="b">${shortName(comp.name)}</span>`;
