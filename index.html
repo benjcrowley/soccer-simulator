@@ -275,29 +275,44 @@ select.comp-select{
 .rank-search:focus{border-color:var(--volt)}
 .rank-search::placeholder{color:var(--chalk-dim)}
 .rank-count{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--chalk-dim);text-transform:uppercase;margin-left:auto;white-space:nowrap}
-.rank-list{
-  background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--volt);
-  max-height:74vh;overflow-y:auto;
+.rank-table{border:1px solid var(--line);border-top:3px solid var(--volt)}
+.rank-head,.rank-row{
+  display:grid;grid-template-columns:116px 1fr 92px 120px 66px;gap:14px;align-items:center;
 }
+.rank-head{
+  padding:13px 20px;background:var(--panel2);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:2;
+}
+.rank-head span{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk-dim)}
+.rank-head .sortable{cursor:pointer;user-select:none;transition:color .12s;display:inline-flex;align-items:center;gap:5px}
+.rank-head .sortable:hover{color:var(--chalk)}
+.rank-head .sortable.active{color:var(--volt)}
+.rank-head .sortable .car{font-size:9px;opacity:.9}
+.rank-head .rh-soc-pos,.rank-head .rh-swing{text-align:center}
+.rank-list{max-height:74vh;overflow-y:auto;background:var(--panel)}
 .rank-row{
-  display:grid;grid-template-columns:52px 1fr 78px 44px 100px 38px;gap:14px;align-items:center;
   padding:9px 20px;border-bottom:1px solid var(--line2);cursor:pointer;transition:background .12s;
 }
 .rank-row:hover{background:var(--panel2)}
 .rank-row:last-child{border-bottom:none}
-.rank-row.top1{background:linear-gradient(90deg,rgba(214,251,63,.10),transparent 60%)}
-.rank-num{font-family:var(--display);font-weight:800;font-size:19px;color:var(--chalk-dim);text-align:right}
-.rank-row.top1 .rank-num,.rank-row.top2 .rank-num,.rank-row.top3 .rank-num{font-size:17px}
-.rank-name{font-family:var(--body);font-weight:600;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rank-name .flag{margin-left:6px}
-.rank-lg{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--chalk-dim);text-transform:uppercase;text-align:left}
-.rank-pos{font-family:var(--display);font-weight:800;font-size:15px;color:var(--chalk-dim);text-align:center}
-.rank-bar{height:6px;background:rgba(240,237,224,.08);border-radius:2px;overflow:hidden}
-.rank-bar i{display:block;height:100%;background:linear-gradient(90deg,#5a7a1a,var(--volt));border-radius:2px}
-.rank-ovr{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--volt);text-align:right}
-@media(max-width:620px){
-  .rank-row{grid-template-columns:40px 1fr 44px 38px;gap:10px;padding:9px 14px}
-  .rank-lg,.rank-bar{display:none}
+.rank-row.leader{background:linear-gradient(90deg,rgba(214,251,63,.09),transparent 55%)}
+.rk-num{font-family:var(--display);font-weight:800;font-size:22px;color:var(--chalk);line-height:1}
+.rk-num.dim{color:var(--chalk-dim)}
+.rk-num.gold{color:var(--volt)}
+.rk-num .hash{font-size:12px;color:var(--chalk-dim);margin-right:1px}
+.rk-name{font-family:var(--body);font-weight:600;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk-name .flag{margin-left:6px}
+.rk-name .lg{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--chalk-dim);text-transform:uppercase;margin-left:8px}
+.rk-soc{text-align:center;font-family:var(--mono);font-size:12px;color:var(--chalk-dim);white-space:nowrap}
+.rk-soc b{font-family:var(--display);font-size:17px;color:var(--volt);margin-left:5px;font-weight:800}
+.rk-swing{text-align:center;font-family:var(--mono);font-size:12.5px;font-weight:700}
+.rk-swing.up{color:var(--volt)}
+.rk-swing.down{color:var(--red)}
+.rk-swing.flat{color:var(--chalk-dim)}
+@media(max-width:640px){
+  .rank-head,.rank-row{grid-template-columns:70px 1fr 66px 56px;gap:8px;padding:9px 12px}
+  .rank-head .rh-soc-pos,.rk-soc{display:none}
+  .rk-num{font-size:18px}
 }
 
 /* ---------- WORLD SIM ---------- */
@@ -455,15 +470,19 @@ footer .logo span{color:var(--volt)}
   <!-- POWER RANKINGS -->
   <section id="ranks">
     <div class="sec-head"><span class="sec-num">03</span><h2>The Power Rankings</h2></div>
-    <p class="sec-desc">Every athlete in the pool, ranked by projected overall at their best position — best to worst.
-    Cap-tied internationals are included (they just line up for someone else). The board re-sorts live when you move the
-    assumption sliders. Click any name to open them in the Lab.</p>
+    <p class="sec-desc">Two rankings, side by side: how great each athlete is in their <b>real sport</b> versus where they'd
+    land in the <b>soccer world</b>. Click <b>Rank in Sport</b> or <b>Rank in Soccer</b> to sort by either. The <b>Swing</b> column
+    is the story — a green ▲ means they climb going to soccer (the athlete the wrong sport was hiding), a red ▼ means their
+    greatness doesn't translate. Soccer ranks re-sort live with the assumption sliders. Click any name to open them in the Lab.</p>
     <div class="league-tabs" id="rankTabs" style="margin-bottom:14px"></div>
     <div class="rank-controls">
       <input class="rank-search" id="rankSearch" placeholder="Search a name…" autocomplete="off" />
       <span class="rank-count" id="rankCount"></span>
     </div>
-    <div class="rank-list" id="rankList"></div>
+    <div class="rank-table">
+      <div class="rank-head" id="rankHead"></div>
+      <div class="rank-list" id="rankList"></div>
+    </div>
   </section>
 
   <!-- WORLD SIM -->
@@ -1488,34 +1507,55 @@ function renderXI(){
 }
 
 /* ================= POWER RANKINGS ================= */
-let rankLeague='ALL', rankQuery='';
+/* real-sport greatness score 0-100 (agent-authored, fact-checked) — drives "Rank in Sport" */
+const FAME={curry:96,lebron:97,giannis:90,edwards:79,westbrook:86,durant:92,kyrie:84,isaiah:68,tyreek:85,lamar:88,mahomes:91,brady:100,saquon:82,henry:85,jefferson:84,parsons:81,cmc:85,sauce:79,matthews:87,jhughes:78,tkachuk:82,hellebuyck:86,betts:90,ohtani:95,elly:76,judge:90,fedde:64,buxton:76,bo:82,deion:94,jordan:100,barry:93,moss:92,iverson:88,reed:89,jokic:92,luka:88,wemby:79,sga:89,tatum:84,ja:74,zion:68,booker:82,mitchell:81,fox2:76,ad:85,kawhi:88,jbutler:83,draymond:81,dame:85,harden:88,cp3:88,drose:75,vince:80,wade:89,melo:83,dwight:82,duncan:95,kg:89,klay:79,jallen:86,burrow:82,hurts:82,kyler:74,herbert:78,chase:84,ceedee:80,ajbrown:80,dk:78,amonra:79,gwilson:74,puka:74,worthy:66,chubb:76,bijan:74,gibbs:76,achane:72,kelce:89,kittle:82,mgarrett:86,tjwatt:86,donald:93,warner:82,surtain:80,khamilton:77,eichel:82,qhughes:83,lhughes:66,caufield:75,btkachuk:76,kconnor:78,robertson:76,afox:81,mcavoy:77,werenski:78,larkin:75,zegras:68,pkane:90,mcdavid:93,crosby:95,mackinnon:89,makar:87,bedard:72,ovechkin:96,kucherov:88,kaprizov:82,draisaitl:89,pastrnak:84,rantanen:84,hedman:86,trout:93,harper:89,witt:84,gunnar:79,carroll:76,trea:82,ktucker:82,skenes:79,hgreene:73,realmuto:80,pca:74,abrams:73,degrom:88,acuna:86,soto:88,tatis:82,julio:80,vladdy:84,jram:85,lindor:85,jazz:74,yordan:82,oneil:74,chapman2:80,yamamoto:78,aja:91,stewie:92,clark:74,sabrina:79,phee:82,reese:73,plum:79,boston:78,paige:71,taurasi:95,suebird:92,maya:90,leslie:89,cparker:90,swoopes:89,lyles:88,shacarri:86,sydney:92,crouser:92,holloway:85,raibenj:82,kerley:79,gabby:82,knighton:72,athing:80,carllewis:97,owens:98,mjohnson2:95,flojo:93,jjk:95,bolt:100,jonjones:96,cormier:88,snyder:83,steveson:79,burroughs:87,rousey:84,ali:100,tyson:93,mayweather:96,sugarray:98,crawford:91,khabib:92,phelps:100,ledecky:96,dressel:88,biles:99,kerri:90,shiffrin:96,vonn:92,shaunwhite:90,chloekim:84,ohno:87,heiden:91,chen:88,thorpe:98,jimbrown:98,kobe:96,shaq:95,wilt:96,magic:96,bird:95,pippen:88,rodman:83,hakeem:93,barkley:90,griffey:93,rickey:93,mantle:95,bonds:96,ichiro:92,payton:93,rice:99,lt2:95,raylewis:92,polamalu:87,hester:78,vick:80,megatron:89,gretzky:100};
+const fameOf=a=> FAME[a.id] ?? 75;
+let rankLeague='ALL', rankQuery='', rankSort='soccer', rankDir=1; // dir 1 = best (rank #1) first
 function renderRankTabs(){
   document.getElementById('rankTabs').innerHTML = LEAGUES.map(l=>
     `<button class="league-tab ${l===rankLeague?'active':''}" data-l="${l}">${l==='ALL'?'All':l}</button>`).join('');
 }
+function renderRankHead(){
+  const car=col=> rankSort===col ? `<span class="car">${rankDir===1?'▲':'▼'}</span>` : '';
+  const act=col=> rankSort===col ? ' active' : '';
+  document.getElementById('rankHead').innerHTML =
+    `<span class="sortable${act('sport')} rh-sport" data-sort="sport">Rank in Sport${car('sport')}</span>
+     <span class="rh-name">Player</span>
+     <span class="rh-soc-pos">Soccer</span>
+     <span class="sortable${act('soccer')} rh-soccer" data-sort="soccer">Rank in Soccer${car('soccer')}</span>
+     <span class="rh-swing">Swing</span>`;
+}
 function renderRanks(){
   const et=effTech();
-  const all = ATHLETES.map(a=>{const best=positionFits(translate(a,et))[0]; return {a,pos:best.pos,ovr:best.score};})
-    .sort((x,y)=> y.ovr-x.ovr || x.a.name.localeCompare(y.a.name));
-  all.forEach((r,i)=> r.rank=i+1);
-  const top=all.length?all[0].ovr:99;
+  // build once over the FULL pool, then assign global ranks on each axis
+  const all = ATHLETES.map(a=>{const best=positionFits(translate(a,et))[0]; return {a,pos:best.pos,ovr:best.score,fame:fameOf(a)};});
+  const bySoc=[...all].sort((x,y)=> y.ovr-x.ovr || y.fame-x.fame || x.a.name.localeCompare(y.a.name));
+  bySoc.forEach((r,i)=> r.socRank=i+1);
+  const bySport=[...all].sort((x,y)=> y.fame-x.fame || y.ovr-x.ovr || x.a.name.localeCompare(y.a.name));
+  bySport.forEach((r,i)=> r.sportRank=i+1);
+  all.forEach(r=> r.swing=r.sportRank-r.socRank); // >0 = climbs in soccer
   const q=rankQuery.trim().toLowerCase();
   const shown=all.filter(r=>
     (rankLeague==='ALL'||r.a.league===rankLeague) &&
     (!q || r.a.name.toLowerCase().includes(q)));
+  const key= rankSort==='sport' ? 'sportRank' : 'socRank';
+  shown.sort((x,y)=> rankDir*(x[key]-y[key]));
   document.getElementById('rankCount').textContent=`${shown.length} / ${all.length} shown`;
+  renderRankHead();
+  const numCls=v=> v===1?'gold':v<=3?'':'dim';
   document.getElementById('rankList').innerHTML = shown.length ? shown.map(r=>{
-    const cls=r.rank<=3?` top${r.rank}`:'';
+    const leader = r[key]===1 ? ' leader' : '';
     const flag=r.a.nat?` <span class="flag">${r.a.nat.flag}</span>`:'';
-    const badge=r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':r.rank;
-    return `<div class="rank-row${cls}" data-id="${r.a.id}">
-      <span class="rank-num">${badge}</span>
-      <span class="rank-name">${r.a.name}${flag}</span>
-      <span class="rank-lg">${r.a.league}</span>
-      <span class="rank-pos">${r.pos}</span>
-      <span class="rank-bar"><i style="width:${Math.round(r.ovr/top*100)}%"></i></span>
-      <span class="rank-ovr">${r.ovr}</span></div>`;
-  }).join('') : `<div class="rank-row" style="cursor:default;color:var(--chalk-dim)"><span></span><span class="rank-name">No athletes match “${rankQuery}”.</span></div>`;
+    const sw = r.swing>0?`<span class="rk-swing up">▲${r.swing}</span>`
+             : r.swing<0?`<span class="rk-swing down">▼${-r.swing}</span>`
+             : `<span class="rk-swing flat">—</span>`;
+    return `<div class="rank-row${leader}" data-id="${r.a.id}">
+      <span class="rk-num ${numCls(r.sportRank)}"><span class="hash">#</span>${r.sportRank}</span>
+      <span class="rk-name">${r.a.name}${flag}<span class="lg">${r.a.league}</span></span>
+      <span class="rk-soc">${r.pos}<b>${r.ovr}</b></span>
+      <span class="rk-num ${numCls(r.socRank)}"><span class="hash">#</span>${r.socRank}</span>
+      ${sw}</div>`;
+  }).join('') : `<div class="rank-row" style="cursor:default"><span></span><span class="rk-name" style="color:var(--chalk-dim)">No athletes match “${rankQuery}”.</span></div>`;
 }
 
 /* ================= WORLD SIM ================= */
@@ -1622,6 +1662,13 @@ document.getElementById('rankTabs').addEventListener('click',e=>{
 });
 document.getElementById('rankSearch').addEventListener('input',e=>{
   rankQuery=e.target.value; renderRanks();
+});
+document.getElementById('rankHead').addEventListener('click',e=>{
+  const h=e.target.closest('.sortable'); if(!h)return;
+  const col=h.dataset.sort;
+  if(rankSort===col) rankDir=-rankDir;      // same column → flip direction
+  else { rankSort=col; rankDir=1; }         // new column → best-first
+  renderRanks();
 });
 document.getElementById('rankList').addEventListener('click',e=>{
   const row=e.target.closest('.rank-row'); if(!row||!row.dataset.id)return;
