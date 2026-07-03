@@ -128,6 +128,15 @@ section{padding:64px 0}
 
 /* ---------- ROSTER PICKER ---------- */
 .league-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.lab-controls{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.lab-controls .league-tabs{margin-bottom:0;flex:1}
+.random-btn{
+  font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.05em;text-transform:uppercase;
+  background:var(--volt);color:var(--bg);border:none;padding:9px 20px;cursor:pointer;border-radius:4px;
+  white-space:nowrap;transition:transform .12s,box-shadow .12s;box-shadow:3px 3px 0 var(--red);
+}
+.random-btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--red)}
+.random-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--red)}
 .league-tab{
   font-family:var(--display);font-weight:800;font-size:17px;letter-spacing:.06em;text-transform:uppercase;
   background:none;border:1px solid var(--line);color:var(--chalk-dim);padding:8px 20px;cursor:pointer;
@@ -417,7 +426,10 @@ footer .logo span{color:var(--volt)}
     Height helps keepers — but on grass it taxes everything else: dribbling low, turning with quick attackers,
     and the 90-minute engine. Agile giants get pushed toward goal, where every inch is free.</p>
 
-    <div class="league-tabs" id="leagueTabs"></div>
+    <div class="lab-controls">
+      <div class="league-tabs" id="leagueTabs"></div>
+      <button class="random-btn" id="randomBtn">🎲 Surprise Me</button>
+    </div>
     <div class="athlete-grid" id="athleteGrid"></div>
 
     <div class="stage">
@@ -1714,6 +1726,14 @@ document.getElementById('athleteGrid').addEventListener('click',e=>{
   const b=e.target.closest('.athlete-chip'); if(!b)return;
   if(b.dataset.more){ gridLimit+=GRID_CHUNK; renderGrid(); return; }
   selectedId=b.dataset.id; compOverride=null; renderGrid(); renderStage();
+});
+document.getElementById('randomBtn').addEventListener('click',()=>{
+  // surprise within the current league filter (or the whole pool on "All Leagues")
+  const pool = selectedLeague==='ALL' ? ATHLETES : ATHLETES.filter(a=>a.league===selectedLeague);
+  let pick; do { pick = pool[Math.floor(Math.random()*pool.length)]; } while(pool.length>1 && pick.id===selectedId);
+  selectedId=pick.id; compOverride=null;
+  renderGrid(); renderStage();
+  document.querySelector('.stage').scrollIntoView({behavior:'smooth',block:'center'});
 });
 document.getElementById('compSelect').addEventListener('change',e=>{
   compOverride=e.target.value; renderStage();
