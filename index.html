@@ -281,7 +281,6 @@ select.comp-select{
 }
 .rank-head{
   padding:13px 20px;background:var(--panel2);border-bottom:1px solid var(--line);
-  position:sticky;top:0;z-index:2;
 }
 .rank-head span{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk-dim)}
 .rank-head .sortable{cursor:pointer;user-select:none;transition:color .12s;display:inline-flex;align-items:center;gap:5px}
@@ -289,7 +288,13 @@ select.comp-select{
 .rank-head .sortable.active{color:var(--volt)}
 .rank-head .sortable .car{font-size:9px;opacity:.9}
 .rank-head .rh-soc-pos,.rank-head .rh-swing{text-align:center}
-.rank-list{max-height:74vh;overflow-y:auto;background:var(--panel)}
+.rank-list{background:var(--panel)}
+.rank-more{
+  display:block;width:100%;background:var(--panel2);border:none;border-top:1px solid var(--line);
+  color:var(--volt);font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.04em;
+  text-transform:uppercase;padding:15px;cursor:pointer;transition:background .12s;
+}
+.rank-more:hover{background:var(--panel)}
 .rank-row{
   padding:9px 20px;border-bottom:1px solid var(--line2);cursor:pointer;transition:background .12s;
 }
@@ -482,6 +487,7 @@ footer .logo span{color:var(--volt)}
     <div class="rank-table">
       <div class="rank-head" id="rankHead"></div>
       <div class="rank-list" id="rankList"></div>
+      <button class="rank-more" id="rankMore" hidden></button>
     </div>
   </section>
 
@@ -1510,7 +1516,8 @@ function renderXI(){
 /* real-sport greatness score 0-100 (agent-authored, fact-checked) — drives "Rank in Sport" */
 const FAME={curry:96,lebron:97,giannis:90,edwards:79,westbrook:86,durant:92,kyrie:84,isaiah:68,tyreek:85,lamar:88,mahomes:91,brady:100,saquon:82,henry:85,jefferson:84,parsons:81,cmc:85,sauce:79,matthews:87,jhughes:78,tkachuk:82,hellebuyck:86,betts:90,ohtani:95,elly:76,judge:90,fedde:64,buxton:76,bo:82,deion:94,jordan:100,barry:93,moss:92,iverson:88,reed:89,jokic:92,luka:88,wemby:79,sga:89,tatum:84,ja:74,zion:68,booker:82,mitchell:81,fox2:76,ad:85,kawhi:88,jbutler:83,draymond:81,dame:85,harden:88,cp3:88,drose:75,vince:80,wade:89,melo:83,dwight:82,duncan:95,kg:89,klay:79,jallen:86,burrow:82,hurts:82,kyler:74,herbert:78,chase:84,ceedee:80,ajbrown:80,dk:78,amonra:79,gwilson:74,puka:74,worthy:66,chubb:76,bijan:74,gibbs:76,achane:72,kelce:89,kittle:82,mgarrett:86,tjwatt:86,donald:93,warner:82,surtain:80,khamilton:77,eichel:82,qhughes:83,lhughes:66,caufield:75,btkachuk:76,kconnor:78,robertson:76,afox:81,mcavoy:77,werenski:78,larkin:75,zegras:68,pkane:90,mcdavid:93,crosby:95,mackinnon:89,makar:87,bedard:72,ovechkin:96,kucherov:88,kaprizov:82,draisaitl:89,pastrnak:84,rantanen:84,hedman:86,trout:93,harper:89,witt:84,gunnar:79,carroll:76,trea:82,ktucker:82,skenes:79,hgreene:73,realmuto:80,pca:74,abrams:73,degrom:88,acuna:86,soto:88,tatis:82,julio:80,vladdy:84,jram:85,lindor:85,jazz:74,yordan:82,oneil:74,chapman2:80,yamamoto:78,aja:91,stewie:92,clark:74,sabrina:79,phee:82,reese:73,plum:79,boston:78,paige:71,taurasi:95,suebird:92,maya:90,leslie:89,cparker:90,swoopes:89,lyles:88,shacarri:86,sydney:92,crouser:92,holloway:85,raibenj:82,kerley:79,gabby:82,knighton:72,athing:80,carllewis:97,owens:98,mjohnson2:95,flojo:93,jjk:95,bolt:100,jonjones:96,cormier:88,snyder:83,steveson:79,burroughs:87,rousey:84,ali:100,tyson:93,mayweather:96,sugarray:98,crawford:91,khabib:92,phelps:100,ledecky:96,dressel:88,biles:99,kerri:90,shiffrin:96,vonn:92,shaunwhite:90,chloekim:84,ohno:87,heiden:91,chen:88,thorpe:98,jimbrown:98,kobe:96,shaq:95,wilt:96,magic:96,bird:95,pippen:88,rodman:83,hakeem:93,barkley:90,griffey:93,rickey:93,mantle:95,bonds:96,ichiro:92,payton:93,rice:99,lt2:95,raylewis:92,polamalu:87,hester:78,vick:80,megatron:89,gretzky:100};
 const fameOf=a=> FAME[a.id] ?? 75;
-let rankLeague='ALL', rankQuery='', rankSort='soccer', rankDir=1; // dir 1 = best (rank #1) first
+const RANK_DEFAULT=25, RANK_CHUNK=50;
+let rankLeague='ALL', rankQuery='', rankSort='soccer', rankDir=1, rankLimit=RANK_DEFAULT; // dir 1 = best (rank #1) first
 function renderRankTabs(){
   document.getElementById('rankTabs').innerHTML = LEAGUES.map(l=>
     `<button class="league-tab ${l===rankLeague?'active':''}" data-l="${l}">${l==='ALL'?'All':l}</button>`).join('');
@@ -1540,10 +1547,13 @@ function renderRanks(){
     (!q || r.a.name.toLowerCase().includes(q)));
   const key= rankSort==='sport' ? 'sportRank' : 'socRank';
   shown.sort((x,y)=> rankDir*(x[key]-y[key]));
-  document.getElementById('rankCount').textContent=`${shown.length} / ${all.length} shown`;
+  const total=shown.length;
+  const vis = Math.min(rankLimit, total);
+  const page = shown.slice(0, vis);
+  document.getElementById('rankCount').textContent = vis<total ? `${vis} of ${total} shown` : `${total} shown`;
   renderRankHead();
   const numCls=v=> v===1?'gold':v<=3?'':'dim';
-  document.getElementById('rankList').innerHTML = shown.length ? shown.map(r=>{
+  document.getElementById('rankList').innerHTML = total ? page.map(r=>{
     const leader = r[key]===1 ? ' leader' : '';
     const flag=r.a.nat?` <span class="flag">${r.a.nat.flag}</span>`:'';
     const sw = r.swing>0?`<span class="rk-swing up">▲${r.swing}</span>`
@@ -1556,6 +1566,17 @@ function renderRanks(){
       <span class="rk-num ${numCls(r.socRank)}"><span class="hash">#</span>${r.socRank}</span>
       ${sw}</div>`;
   }).join('') : `<div class="rank-row" style="cursor:default"><span></span><span class="rk-name" style="color:var(--chalk-dim)">No athletes match “${rankQuery}”.</span></div>`;
+  const moreBtn=document.getElementById('rankMore');
+  if(vis<total){
+    const next=Math.min(RANK_CHUNK, total-vis);
+    moreBtn.hidden=false; moreBtn.dataset.act='more';
+    moreBtn.textContent=`See more (${next} of ${total-vis} left)`;
+  }else if(rankLimit>RANK_DEFAULT && total>RANK_DEFAULT){
+    moreBtn.hidden=false; moreBtn.dataset.act='less';
+    moreBtn.textContent=`Show less ↑`;
+  }else{
+    moreBtn.hidden=true;
+  }
 }
 
 /* ================= WORLD SIM ================= */
@@ -1658,10 +1679,10 @@ document.getElementById('simBtn').addEventListener('click',runSim);
 /* rankings interactions */
 document.getElementById('rankTabs').addEventListener('click',e=>{
   const b=e.target.closest('.league-tab'); if(!b)return;
-  rankLeague=b.dataset.l; renderRankTabs(); renderRanks();
+  rankLeague=b.dataset.l; rankLimit=RANK_DEFAULT; renderRankTabs(); renderRanks();
 });
 document.getElementById('rankSearch').addEventListener('input',e=>{
-  rankQuery=e.target.value; renderRanks();
+  rankQuery=e.target.value; rankLimit=RANK_DEFAULT; renderRanks();
 });
 document.getElementById('rankHead').addEventListener('click',e=>{
   const h=e.target.closest('.sortable'); if(!h)return;
@@ -1669,6 +1690,11 @@ document.getElementById('rankHead').addEventListener('click',e=>{
   if(rankSort===col) rankDir=-rankDir;      // same column → flip direction
   else { rankSort=col; rankDir=1; }         // new column → best-first
   renderRanks();
+});
+document.getElementById('rankMore').addEventListener('click',e=>{
+  rankLimit = e.currentTarget.dataset.act==='less' ? RANK_DEFAULT : rankLimit+RANK_CHUNK;
+  renderRanks();
+  if(e.currentTarget.dataset.act==='less') document.getElementById('ranks').scrollIntoView({behavior:'smooth'});
 });
 document.getElementById('rankList').addEventListener('click',e=>{
   const row=e.target.closest('.rank-row'); if(!row||!row.dataset.id)return;
