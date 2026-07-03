@@ -279,7 +279,7 @@ select.comp-select{
 .rank-count{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--chalk-dim);text-transform:uppercase;margin-left:auto;white-space:nowrap}
 .rank-table{border:1px solid var(--line);border-top:3px solid var(--volt)}
 .rank-head,.rank-row{
-  display:grid;grid-template-columns:116px 1fr 92px 120px 66px;gap:14px;align-items:center;
+  display:grid;grid-template-columns:136px 1fr 92px 150px;gap:14px;align-items:center;
 }
 .rank-head{
   padding:13px 20px;background:var(--panel2);border-bottom:1px solid var(--line);
@@ -289,7 +289,7 @@ select.comp-select{
 .rank-head .sortable:hover{color:var(--chalk)}
 .rank-head .sortable.active{color:var(--volt)}
 .rank-head .sortable .car{font-size:9px;opacity:.9}
-.rank-head .rh-soc-pos,.rank-head .rh-swing{text-align:center}
+.rank-head .rh-soc-pos{text-align:center}
 .rank-list{background:var(--panel)}
 .rank-more{
   display:block;width:100%;background:var(--panel2);border:none;border-top:1px solid var(--line);
@@ -307,19 +307,17 @@ select.comp-select{
 .rk-num.dim{color:var(--chalk-dim)}
 .rk-num.gold{color:var(--volt)}
 .rk-num .hash{font-size:12px;color:var(--chalk-dim);margin-right:1px}
+.rk-num .of{font-family:var(--mono);font-size:10px;font-weight:400;color:var(--chalk-dim);margin-left:4px}
 .rk-name{font-family:var(--body);font-weight:600;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rk-name .flag{margin-left:6px}
 .rk-name .lg{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--chalk-dim);text-transform:uppercase;margin-left:8px}
 .rk-soc{text-align:center;font-family:var(--mono);font-size:12px;color:var(--chalk-dim);white-space:nowrap}
 .rk-soc b{font-family:var(--display);font-size:17px;color:var(--volt);margin-left:5px;font-weight:800}
-.rk-swing{text-align:center;font-family:var(--mono);font-size:12.5px;font-weight:700}
-.rk-swing.up{color:var(--volt)}
-.rk-swing.down{color:var(--red)}
-.rk-swing.flat{color:var(--chalk-dim)}
 @media(max-width:640px){
-  .rank-head,.rank-row{grid-template-columns:70px 1fr 66px 56px;gap:8px;padding:9px 12px}
+  .rank-head,.rank-row{grid-template-columns:58px 1fr 62px;gap:8px;padding:9px 12px}
   .rank-head .rh-soc-pos,.rk-soc{display:none}
   .rk-num{font-size:18px}
+  .rk-num .of{display:none}
 }
 
 /* ---------- WORLD SIM ---------- */
@@ -478,10 +476,11 @@ footer .logo span{color:var(--volt)}
   <!-- POWER RANKINGS -->
   <section id="ranks">
     <div class="sec-head"><span class="sec-num">03</span><h2>The Power Rankings</h2></div>
-    <p class="sec-desc">Two rankings, side by side: how great each athlete is in their <b>real sport</b> versus where they'd
-    land in the <b>soccer world</b>. Click <b>Rank in Sport</b> or <b>Rank in Soccer</b> to sort by either. The <b>Swing</b> column
-    is the story — a green ▲ means they climb going to soccer (the athlete the wrong sport was hiding), a red ▼ means their
-    greatness doesn't translate. Soccer ranks re-sort live with the assumption sliders. Click any name to open them in the Lab.</p>
+    <p class="sec-desc">Two rankings, side by side. <b>Rank in Sport</b> is where each athlete stands <b>within their own sport</b>
+    (LeBron is #1 of the NBA pool, Bolt #1 in track, Ali #1 in combat). <b>Rank in Soccer</b> is where they'd land in the whole
+    <b>soccer world</b> — all 234 athletes on one board. Click either header to sort by it (click again to reverse). The gap between
+    the two is the story: a sport #1 who's a middling soccer prospect, or an unheralded athlete who'd be world-class on grass.
+    Soccer ranks re-sort live with the assumption sliders. Click any name to open them in the Lab.</p>
     <div class="league-tabs" id="rankTabs" style="margin-bottom:14px"></div>
     <div class="rank-controls">
       <input class="rank-search" id="rankSearch" placeholder="Search a name…" autocomplete="off" />
@@ -1599,42 +1598,41 @@ function renderRankHead(){
     `<span class="sortable${act('sport')} rh-sport" data-sort="sport">Rank in Sport${car('sport')}</span>
      <span class="rh-name">Player</span>
      <span class="rh-soc-pos">Soccer</span>
-     <span class="sortable${act('soccer')} rh-soccer" data-sort="soccer">Rank in Soccer${car('soccer')}</span>
-     <span class="rh-swing">Swing</span>`;
+     <span class="sortable${act('soccer')} rh-soccer" data-sort="soccer">Rank in Soccer${car('soccer')}</span>`;
 }
 function renderRanks(){
   const et=effTech();
-  // build once over the FULL pool, then assign global ranks on each axis
   const all = ATHLETES.map(a=>{const best=positionFits(translate(a,et))[0]; return {a,pos:best.pos,ovr:best.score,fame:fameOf(a)};});
+  // "Rank in Soccer" = across the whole soccer world (all 234)
   const bySoc=[...all].sort((x,y)=> y.ovr-x.ovr || y.fame-x.fame || x.a.name.localeCompare(y.a.name));
   bySoc.forEach((r,i)=> r.socRank=i+1);
-  const bySport=[...all].sort((x,y)=> y.fame-x.fame || y.ovr-x.ovr || x.a.name.localeCompare(y.a.name));
-  bySport.forEach((r,i)=> r.sportRank=i+1);
-  all.forEach(r=> r.swing=r.sportRank-r.socRank); // >0 = climbs in soccer
+  // "Rank in Sport" = WITHIN each athlete's own league (by real-sport greatness; ties broken by soccer projection)
+  const leagues={};
+  all.forEach(r=> (leagues[r.a.league]=leagues[r.a.league]||[]).push(r));
+  for(const grp of Object.values(leagues)){
+    grp.sort((x,y)=> y.fame-x.fame || y.ovr-x.ovr || x.a.name.localeCompare(y.a.name))
+       .forEach((r,i)=> { r.sportRank=i+1; r.sportTotal=grp.length; });
+  }
   const q=rankQuery.trim().toLowerCase();
   const shown=all.filter(r=>
     (rankLeague==='ALL'||r.a.league===rankLeague) &&
     (!q || r.a.name.toLowerCase().includes(q)));
   const key= rankSort==='sport' ? 'sportRank' : 'socRank';
-  shown.sort((x,y)=> rankDir*(x[key]-y[key]));
+  shown.sort((x,y)=> rankDir*(x[key]-y[key]) || (x.socRank-y.socRank)); // tie-break by soccer-world rank
   const total=shown.length;
   const vis = Math.min(rankLimit, total);
   const page = shown.slice(0, vis);
   document.getElementById('rankCount').textContent = vis<total ? `${vis} of ${total} shown` : `${total} shown`;
   renderRankHead();
   const numCls=v=> v===1?'gold':v<=3?'':'dim';
-  document.getElementById('rankList').innerHTML = total ? page.map(r=>{
-    const leader = r[key]===1 ? ' leader' : '';
+  document.getElementById('rankList').innerHTML = total ? page.map((r,i)=>{
+    const leader = i===0 ? ' leader' : '';
     const flag=r.a.nat?` <span class="flag">${r.a.nat.flag}</span>`:'';
-    const sw = r.swing>0?`<span class="rk-swing up">▲${r.swing}</span>`
-             : r.swing<0?`<span class="rk-swing down">▼${-r.swing}</span>`
-             : `<span class="rk-swing flat">—</span>`;
     return `<div class="rank-row${leader}" data-id="${r.a.id}">
-      <span class="rk-num ${numCls(r.sportRank)}"><span class="hash">#</span>${r.sportRank}</span>
+      <span class="rk-num ${numCls(r.sportRank)}"><span class="hash">#</span>${r.sportRank}<span class="of">of ${r.sportTotal}</span></span>
       <span class="rk-name">${r.a.name}${flag}<span class="lg">${r.a.league}</span></span>
       <span class="rk-soc">${r.pos}<b>${r.ovr}</b></span>
-      <span class="rk-num ${numCls(r.socRank)}"><span class="hash">#</span>${r.socRank}</span>
-      ${sw}</div>`;
+      <span class="rk-num ${numCls(r.socRank)}"><span class="hash">#</span>${r.socRank}<span class="of">of ${all.length}</span></span></div>`;
   }).join('') : `<div class="rank-row" style="cursor:default"><span></span><span class="rk-name" style="color:var(--chalk-dim)">No athletes match “${rankQuery}”.</span></div>`;
   const moreBtn=document.getElementById('rankMore');
   if(vis<total){
